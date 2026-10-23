@@ -1,0 +1,18 @@
+# Paths that make a changed file HIGH risk for scripts/diff-scope.sh.
+# One extended regex per line, matched against the LOWERCASED file path. Blank lines and
+# lines starting with # are ignored. HIGH-risk files are read first, are never dropped by
+# a --budget cut-off, and are the ones that get the full mandatory-check treatment.
+#
+# Keep this list short and specific to your codebase: every pattern that matches too much
+# turns "high risk" into "everything" and the saving disappears. Edit freely.
+
+# auth / session / credentials
+(^|/)[^/]*(auth|login|logout|session|token|keychain|credential|oauth|biometric)
+# persistence
+\.xcdatamodel
+(^|/)[^/]*(coredata|persistence|migration|localrepo|database)
+# capability / entitlement config (reviewed like source code - IOS-015)
+\.entitlements$
+(^|/)info\.plist$
+# concurrency primitives
+(^|/)[^/]*(actor|dispatch|concurren|mutex|semaphore)

@@ -2,62 +2,370 @@
 
 > Forge code with intention. Guide it with review.
 
-A lean, token-conscious spec-driven workflow for AI coding agents - forges code from a gated spec, then guides it through multi-agent review before it ships.
+A lean, token-conscious spec-driven workflow for AI coding agents — forges code from a
+gated spec, then guides it through a strict, single-pass review before it ships.
 
-Inspired by GitHub Spec-Kit and the broader Spec-Driven Development (SDD) pattern, but scoped down: two documents instead of four, and a handful of mechanics those frameworks don't cover.
+Inspired by GitHub Spec-Kit and the broader Spec-Driven Development (SDD) pattern, and
+grown from real review and generation incidents rather than theory. It is plain Markdown
+plus dependency-free shell scripts: it works with any AI coding agent, any language and any
+Git host.
+
+## How to use it
+
+Clone it once, anywhere (for example `~/Tools/Forge-guide`). You never copy it into your
+project. Your agent reads the rules from the clone; the scripts run from inside your
+project and use that project's git. Only needs `git` and `bash`.
+
+**Make your agent see the toolkit.** Most agents have a way to read files outside the
+project (an extra directory, a workspace folder, or simply the absolute path). Then start
+the session in your *project* and give the agent its entry file:
+
+> Read `<path>/Forge-guide/AGENTS.md` and follow it for this session.
+
+Agents that auto-load `AGENTS.md` or `CLAUDE.md` from the working directory can instead
+use a copy or symlink of that one file in the project root.
+
+**To review a PR or a commit range**
+
+1. In your project: `<path>/Forge-guide/scripts/pr-range.sh <PR number | PR URL | branch>`
+   prints the base and head commits.
+2. Open a *fresh* agent session (a fresh context is what makes the review independent) and say:
+   > Use `<path>/Forge-guide/review/review-prompt.md` as the rubric. Base `<sha>`, head
+   > `<sha>`. Mode: standard. PR description: ...
+3. You get graded findings (CRITICAL to NIT), a mechanical verdict and a list of checks run.
+   Post it on the PR yourself, or automate that with a CI job (see "Reviewing a PR").
+
+**To generate code**
+
+1. In your project, say:
+   > Follow `<path>/Forge-guide/AGENTS.md`. Task: <what you want>.
+2. The agent builds a map of your codebase once (`skills/build-context.md`), writes a short
+   spec, runs the impact and reuse scans, asks its questions in one batch, then codes and
+   checks its own work against the same gate the reviewer uses.
+
+**Choosing a depth:** set `Mode: strict | standard | fast` in your request. It changes how
+much is searched and re-checked, never the severities or the verdict.
+
+**Where your project's state goes:** `<project>/.forge/` (specs, logs, session state).
+Add `.forge/` to `.git/info/exclude` if you do not want it committed.
+
+Optional adapters: a Claude Code reviewer subagent and a PR-gate hook are included under
+`.claude/` and `scripts/pr-gate.sh`. Everything works without them.
+
+## Principles for the developer's trust
+
+- **Your code, your call.** The agent changes only what the spec names, matches the style and
+  structure already in the repo, and never commits, pushes or opens a PR unless asked.
+- **Best for today, honest about tomorrow.** Most tasks depend on the current state of the
+  code, so the change fits it. If a whole-codebase refactor would be better, the agent says
+  so once, in a short "Beyond this change" note, and leaves the decision to you.
+- **Full context before code, shown at handoff.** Every handoff states what was read, what
+  was not verified, what was left untouched and how to check it.
+- **Reviews follow the same rule.** A review does not demand a restructure; it can mention
+  one as an observation that does not affect the verdict.
 
 ## Why this exists
 
-Most SDD frameworks (Spec-Kit, BMAD, Superpowers) solve **consistency** - making sure the agent doesn't contradict itself or invent scope. None of them optimize for **cost**, none verify the implementation actually satisfies the spec afterward, and none handle rule staleness as your codebase evolves. This scaffold tries to close those gaps without the ceremony overhead built for 40-engineer teams.
+Most SDD frameworks (Spec-Kit, BMAD, Superpowers) solve **consistency** — making sure the
+agent doesn't contradict itself or invent scope. None of them optimize for **cost**, none
+verify the implementation actually satisfies the spec afterward, none check whether
+generated code duplicates or breaks something that already exists, and none handle rule
+staleness as a codebase evolves. This project closes those gaps without the ceremony
+overhead built for 40-engineer teams.
 
-## The eight pillars
+## The pillars
 
-1. **Spec-gate** - no code is generated until a spec exists and open questions are resolved.
-2. **Lean ceremony** - `spec.md` + `tasks.md` only. No separate `plan.md` layer unless a task genuinely needs one.
-3. **Token economy** - clarifying questions are batched and selectable (menu-style, not freeform back-and-forth); every session logs an entry in `logs/token-ledger.md` so the cost-saving claim is measurable, not assumed.
-4. **Trust tiers** - every rule in `memory/constitution.md` and every skill file is tagged `HARD` (non-negotiable), `DEFAULT` (follow unless repo context disagrees), or `SUGGESTED` (style preference, easily overridden).
-5. **Staleness / drift detection** - rules carry a `last-verified` date. `scripts/drift-check.sh` greps the live codebase for whether a rule's stated assumption still holds before the agent trusts it.
-6. **Verification loop** - after implementation, `scripts/verify-spec.sh` (or the agent, manually) checks the code against the acceptance criteria in `spec.md`, not just against "did it compile."
-7. **Security hygiene** - a standing `HARD` tier check in the constitution: no hardcoded secrets, no PII in logs, no bypassing existing auth/keychain patterns.
-8. **Session-state handoff** - `session-state.md` is a short, structured "where I left off" file for solo devs jumping between projects - not a full transcript log.
+1. **Spec-gate** — no code is generated until a spec exists and open questions are resolved.
+2. **Lean ceremony** — `spec.md` + `tasks.md` only. No separate `plan.md` layer unless a
+   task genuinely needs one.
+3. **Token economy** — clarifying questions are batched and selectable (menu-style, not
+   freeform back-and-forth); every session logs an entry in `logs/token-ledger.md`.
+4. **Trust tiers** — every constitution/skill rule is tagged `HARD`/`DEFAULT`/`SUGGESTED`.
+   Nothing is flat-priority.
+5. **Staleness / drift detection** — rules carry a `last-verified` date and get re-checked
+   against the live codebase, not trusted indefinitely.
+6. **Verification loop** — implementation is checked against acceptance criteria, not just
+   "did it compile" — and re-checked after every round of edits, not only the first.
+7. **Security hygiene** — a standing HARD-tier check: no hardcoded secrets, no PII in logs,
+   no bypassing established auth/keychain patterns.
+8. **Session-state handoff** — a short, structured "where I left off," not a transcript.
+9. **Context-first generation** — before writing anything, scan what already exists in the
+   area being touched: existing utilities/extensions, established patterns, centralized
+   entry points to reuse instead of duplicating. Also checks whether the problem is already
+   solved before generating a redundant fix.
+10. **Impact / blast-radius analysis** — before task breakdown, trace every consumer/call-
+    site a change touches — the class of bug ("this hook is reused for something else
+    elsewhere") that a diff-only read never catches.
+11. **Ultra-strict quality gate, scoped by a ratchet** — CRITICAL/HIGH findings always
+    block; the gate applies to new/changed code only, not an entire legacy file, so it's
+    adoptable on a real existing codebase instead of failing everything on day one.
+12. **Playbooks, not just principles** — known-better-patterns grounded in real incidents
+    (Seen → Action), shared verbatim between generation and review so the two standards
+    never drift apart. Multi-stack from the start via `playbooks/_template.md` — but a new
+    stack playbook starts empty and grows only from real incidents, never invented ones.
+13. **Agent- and language-agnostic** — `AGENTS.md` (the open convention read by many agent
+    tools) is the entry point; `CLAUDE.md` carries the same content for tools that look for
+    that name. Rules, playbooks and scripts are plain files with no tool-specific
+    dependency; stack lessons are per-language playbooks. Both entry files stay short on purpose — evidence shows bloated or
+    LLM-expanded instruction files hurt agent performance and inflate cost rather than
+    helping.
+14. **Platform / language currency check** — generalized past iOS: every ecosystem has its
+    own deprecation lifecycle, checked against the project's own declared minimum target,
+    preferring existing ecosystem tooling over reasoning from memory on a fast-moving
+    surface.
+15. **Cached base context, refreshed only when it moves** — general "what already exists
+    in this codebase" knowledge (extensions, patterns, conventions) is captured once
+    against a specific commit and reused until `main` actually moves, instead of being
+    re-derived from scratch on every task. Diff-specific checks (cross-call-site, verify-
+    before-asserting) always still run live — only the general, stable knowledge is
+    cached.
+
+16. **Lean rule loading + check-depth modes** — rules are loaded by need, not by default:
+    a ~2K-token core gate always, playbook entries one-by-one via `scripts/playbook.sh`,
+    rationale files only on demand. A `Mode: strict | standard | fast` line sets how much is
+    searched and re-checked without ever changing severities or the verdict. Reviews run
+    triage → diff-only candidate pass → targeted confirmation instead of reading context up
+    front, and a re-review of an updated PR covers only the commits since the last reviewed
+    head. The token ledger records real token deltas so cost drift is visible.
+
+## Token budget
+
+Rules loaded before any work starts, estimated at ~4 bytes per token:
+
+| | Before | After |
+|---|---|---|
+| Generation task (entry file + constitution + gate + 1 skill + playbook + context-scan) | ~17.7K | ~12.5K with the playbook index, 3 matching entries, `flow-brief.md` (~1.5K) and the codebase map (~2.5K when built) - about -29%; the map is the deliberate cost of not generating blind |
+| Review (entry file + constitution + gate + review prompt + playbook) | ~18.4K | ~9.5K with the index and 3 matching entries (about -48%) |
+
+Biggest single item: the playbook was ~8.4K tokens read whole; its index is ~0.85K and each
+entry ~0.25K, so a task touching three domains pays ~1.6K. These are file-size estimates,
+not measured session totals — `logs/token-ledger.md` is where the real numbers go, and
+`evals/` is the protocol for turning them into a with/without comparison (tokens per task,
+recall on known issues, false positives).
 
 ## Layout
 
 ```
 Forge-guide/
-├── CLAUDE.md # thin root loader - points to constitution + relevant skill
+├── CLAUDE.md                 # same entry point, for tools that read this file name
+├── AGENTS.md                 # entry point for any agent — kept in sync with CLAUDE.md by hand
 ├── memory/
-│   └── constitution.md # tiered, dated, non-negotiable-vs-suggested rules
+│   ├── constitution.md       # tiered, dated, non-negotiable-vs-suggested rules
+│   ├── quality-gate.md       # CORE rulebook (~2K tokens): severity, gate, modes, mandatory checks
+│   └── quality-gate-detail.md # rationale + incidents; read one section on demand, never at start
+├── playbooks/
+│   ├── ios-swift.md          # Seen/Action entries from real production incidents
+│   └── _template.md          # format + rules for adding a new stack playbook honestly
+├── context/
+│   ├── context-scan.md       # already-exists / already-fixed checks + snapshot caching logic
+│   ├── base-snapshot.md      # the codebase map: read in full first, every generation task (project-specific)
+│   ├── flow-brief.md         # generation: map the existing flow, one batched question round, stop-and-ask triggers
+│   ├── risk-paths.txt        # regexes marking a changed file HIGH risk (edit for your codebase)
+├── review/
+│   ├── review-prompt.md      # single-pass review harness, references quality-gate + playbooks
+│   └── regressions.md        # past review misses as replayable cases; replayed only when the rubric changes
+├── evals/
+│   ├── README.md             # A/B protocol: tokens per task, recall, false positives (measure, do not estimate)
+│   └── results.md            # results table template
 ├── skills/
-│   ├── new-feature.md
-│   ├── bug-fix.md
-│   ├── refactor.md
-│   └── api-integration.md
+│   ├── new-feature.md        # context-scan → clarify → impact-analysis → build → verify
+│   ├── bug-fix.md            # already-fixed check → sibling-instance/downstream checks
+│   ├── refactor.md           # context-scan IS the impact analysis for a refactor
+│   ├── api-integration.md    # existing-integration scan + provider currency check
+│   └── spec-builder.md       # drafts spec.md from a ticket/PRD/design/API doc
 ├── specs/
 │   └── template/
-│       ├── spec.md # what/why + acceptance criteria + [NEEDS CLARIFICATION]
-│       ├── tasks.md # implementation checklist, token-budgeted
-│       └── verification.md   # post-implementation check against spec.md
-├── session-state.md # compact handoff state, not a transcript
+│       ├── spec.md           # includes impact/blast-radius, gaps, interface mapping
+│       ├── tasks.md
+│       └── verification.md
+├── session-state.md
 ├── logs/
-│   └── token-ledger.md # append-only cost log, rolled up periodically
+│   ├── token-ledger.md
+│   └── suppressions.md       # audit trail for waived MEDIUM findings
 ├── scripts/
-│   ├── drift-check.sh # compares skill assumptions vs current repo state
-│   └── verify-spec.sh # checks implementation vs acceptance criteria
+│   ├── pr-range.sh           # PR number or branch -> exact base/head commits, no checkout
+│   ├── map-probe.sh          # stack-neutral fact sheet (shape, scope, tests, gates) used to build the map
+│   ├── xref.sh               # dependency-free call-site finder for the cross-call-site check
+│   ├── impact.sh             # consumers of every declaration you change/remove, flagged when in untouched files
+│   ├── reuse-scan.sh         # existing extensions/helpers: find before writing, flag re-implementation after
+│   ├── probes/swift.sh       # optional stack extras; add probes/<stack>.sh for others
+│   ├── pr-gate.sh            # PreToolUse hook: blocks `pr create` while the independent pass is unticked
+│   ├── ledger-append.sh      # one-command token-ledger row (per task)
+│   ├── phase-log.sh          # tokens, files read and cause per phase (map/flow/scans/generate/review/rework)
+│   ├── finding-log.sh        # one row per finding: who found it, status, which check should have
+│   ├── report-metrics.sh     # reads the three ledgers: tokens by type/phase, escapes, precision, playbook hits
+│   ├── playbook.sh           # index / show <ID> / find <kw> — read playbook entries, not the file
+│   ├── diff-scope.sh         # review pre-filter: read order, skips, budget — from numstat only
+│   ├── drift-check.sh
+│   ├── verify-spec.sh
+│   ├── check-context-freshness.sh  # cheap staleness check for base-snapshot.md
+│   └── refresh-context.sh          # shows what changed since the last snapshot
 └── .claude/
-    └── settings.json # hooks - deterministic enforcement, not just advisory md
+    ├── settings.json         # optional Claude Code adapter: PreToolUse hook running pr-gate.sh
+    └── agents/forge-reviewer.md  # optional Claude Code adapter: read-only reviewer subagent
 ```
+
+## Context before code: map, then flow, then questions
+
+Forge-guide is for any project in any language. Before writing or changing code the agent
+reads the overall codebase map (`context/base-snapshot.md`, capped ~2.5K tokens): what the
+project is, how big it is and where work happens, how it is structured and which layers it
+uses, where shared helpers and shared processes live, entry points, and how it is tested
+and gated. Then it maps the flow of the area, then asks, then codes.
+
+`scripts/map-probe.sh` gathers the facts for any repository as paths, names and counts
+only (languages and size, manifests, docs, files per directory, layer-named directories,
+entry points, tests and how they run, CI and coverage gates, recent churn, largest files),
+so building the map costs a handful of targeted reads; the developer confirms the uncertain
+rows once (`skills/build-context.md`). Stack extras are optional plugins in
+`scripts/probes/<stack>.sh` (Swift is included as an example); stack lessons live in
+`playbooks/<stack>.md`. The spec records `Map consulted`, and `verify-spec.sh` fails while
+that is still a placeholder. The map describes one project, so it lives in that project's
+repo, not in the shared toolkit.
+
+## Tools: local only, nothing to install
+
+Forge-guide runs on the agent's own search plus two dependency-free scripts (`map-probe.sh`
+for the map, `xref.sh` for call sites). A local language-server or IDE reference tool is
+used when the session already has one, because it is exact; nothing is installed unasked.
+Source and diffs are never sent to a third-party service (hosted embeddings, vector
+databases, remote analyzers) unless the developer approves that service for the project -
+this is a HARD rule in the constitution, because many teams cannot allow it.
+
+## Flow understanding before code
+
+The generation skills used to ask generic questions (consumer, data shape...) and miss
+assumptions about the flow itself. `context/flow-brief.md` makes them map entry points, the
+current flow with `file:line`, ownership and boundaries first, sort unknowns into
+answerable-from-code / needs-a-human / safe-to-assume, and ask once. The spec template has
+matching "Flow & understanding" and "Assumptions" sections. The independent pass before a PR
+is enforced by a `verification.md` checkbox that `verify-spec.sh` checks. Review misses are
+kept as cases in `review/regressions.md` (R-10, a request id in a log, has no check yet).
+
+## Impact and reuse scans (the two context-building checks)
+
+Two local, read-only scripts turn "check the impact on existing flows" and "check whether
+a helper already exists" into steps with output, so they are not skipped under pressure.
+
+- `scripts/impact.sh --symbols a b c` before coding, `scripts/impact.sh <base> [head]` on the
+  finished diff: for each changed or removed declaration (including the function or
+  property enclosing a changed line, and the enum when a case is added), its consumers,
+  how many are in files the change did not touch, and which areas they belong to. Each such
+  area needs a decision in the spec's Impact table.
+- `scripts/reuse-scan.sh --need "optional nil blank trim"` before writing; `scripts/reuse-scan.sh
+  <base> [head]` after: lists existing extension members and `*Helper`/`*Utils` functions with
+  how often the codebase already uses them, and flags added lines that repeat a helper's body,
+  use a raw `== nil` where `isNil` exists, or declare a name close to an existing helper's.
+- Both are text heuristics (word-boundary search, tuned on Swift and generic on other languages). They produce candidates, not
+  verdicts; a language-server reference tool is exact if the session has one. `verify-spec.sh`
+  fails while the spec's `Impact scan` and `Reuse scan` lines are still placeholders.
+
+## Using the toolkit from outside your project
+
+Keep one clone of this repo (say `~/Tools/Forge-guide`) and start your agent from the
+*project*, with the toolkit readable as a reference (an extra directory, a workspace folder,
+or by absolute path). Scripts run by absolute path from inside the project and use that
+project's git.
+
+- **State stays in the project:** `.forge/specs/`, `.forge/logs/`, `.forge/session-state.md`.
+  `scripts/ledger-append.sh` creates `.forge/logs/token-ledger.md` on first use. Add `.forge/`
+  to the project's `.git/info/exclude` if you do not want it committed.
+- **The PR gate is optional and tool-specific.** `scripts/pr-gate.sh` reads a tool-call JSON
+  on stdin and blocks `gh pr create` / `az repos pr create` while the newest spec's
+  Independent pass is unticked. Hook-capable agents can run it before shell commands; in
+  Claude Code, add it to `~/.claude/settings.json` (use your real path) and check `/hooks`:
+  ```json
+  { "hooks": { "PreToolUse": [ { "matcher": "Bash", "hooks": [
+    { "type": "command", "command": "/path/to/Forge-guide/scripts/pr-gate.sh" } ] } ] } }
+  ```
+  With no hook, tick the Independent pass line yourself; `verify-spec.sh` still checks it.
+- **A reviewer in its own context** is what makes the pass independent. Any agent can do this
+  as a fresh session pointed at `review/review-prompt.md`. For Claude Code,
+  `.claude/agents/forge-reviewer.md` packages it as a read-only subagent; copy it to
+  `~/.claude/agents/` to use it in every project.
+
+## Reviewing a PR (Azure DevOps, GitHub or plain branches)
+
+1. In the project's checkout run `scripts/pr-range.sh <PR number>` (or `<source-branch>
+   [target-branch]`). It fetches only into private `refs/forge/*` refs, leaves your working
+   tree alone, and prints the base and head commits, their subjects (so a swap is obvious),
+   the size of the change, and the next commands. Number lookups try the PR merge ref
+   (`refs/pull/<n>/merge`), then `az repos pr show` (Azure DevOps) or `gh pr view`
+   (GitHub).
+2. Run `scripts/diff-scope.sh <base> <head>` for the cheap triage (what to read first, what
+   to skip, which files need a checker).
+3. Open a fresh agent session and say "Use review/review-prompt.md as the review rubric;
+   base <sha>, head <sha>; Mode: standard; PR description: ...". A fresh context is what
+   makes it an independent pass. (Claude Code users can instead call the packaged
+   subagent: `forge-reviewer: review <base>..<head>`.)
+4. The result is Markdown with a `Reviewed: ... | Pass: ... | Coverage: ...` header, graded
+   findings, a mechanical verdict and a Checks-run block. Post it as a PR comment yourself;
+   nothing is posted automatically. After new pushes, run step 1 again and say
+   "incremental, last reviewed head <old sha>" so only the new commits are read.
+5. Clean up the private refs when you like:
+   `git for-each-ref --format='%(refname)' refs/forge | xargs -n1 git update-ref -d`.
+
+   Troubleshooting: `pr-range.sh` also accepts a PR URL. If it says `git does not run` (for example
+   "Bad CPU type in executable" from a stale Intel-only `/usr/local/bin/git` on Apple Silicon), put a
+   working git first: `PATH=/usr/bin:$PATH scripts/pr-range.sh <PR>`.
+
+Tested against local and bare-remote repositories, not against a live Azure DevOps server;
+the merge-ref parent order on Azure DevOps is assumed to match GitHub, which is why the
+script prints both subjects.
+
+## Optional: Claude Code reviewer subagent
+
+`.claude/agents/forge-reviewer.md` defines a read-only reviewer for Claude Code. It is
+picked up automatically when you work inside this folder; for your own project, copy it into
+`.claude/agents/` (or `~/.claude/agents/` for every project). Its `model:` line is explicit
+on purpose - raise it for a `strict` review of auth, session or persistence work. Other
+agents get the same behaviour from a fresh session plus `review/review-prompt.md`. Before
+raising a PR, run the review on the branch and tick the "Independent pass" line in the
+spec's `verification.md`.
+
+## Measuring agents and skills (session reports)
+
+Three append-only logs, summed by one script, answer "what is this costing and is it
+working": `scripts/ledger-append.sh` (a row per task), `scripts/phase-log.sh` (a row per
+phase: map, flow, questions, scans, generate, self-check, review, rework - with tokens, files
+read and why more context was needed) and `scripts/finding-log.sh` (a row per finding: who
+found it, whether it was real, which check should have caught it). `scripts/report-metrics.sh
+[since-date]` prints tokens by task type and phase, the costliest tasks, the escape rate
+(real findings that a human reviewer, another agent, CI or production caught after our own
+passes did not), precision per pass, which checks missed the escapes, and playbook entries
+that were cited but never loaded. `skills/session-report.md` turns that into the report.
+Nothing here is estimated by the scripts: blank figures are left out, not guessed.
 
 ## Flow
 
-1. Copy `specs/template/` to `specs/00X-feature-name/`.
-2. Fill in the problem statement in `spec.md`. Leave `[NEEDS CLARIFICATION]` markers where you're unsure.
-3. Agent reads `CLAUDE.md` → picks the relevant `skills/*.md` → asks its clarifying questions as a single batched, menu-style round (see `skills/new-feature.md` for the question template) → resolves every `[NEEDS CLARIFICATION]` marker.
-4. Agent writes `tasks.md` from the finalized spec.
-5. Implementation happens task-by-task, referencing existing code by file:line, not by pasting whole files into context.
-6. After implementation, run `scripts/verify-spec.sh` (or ask the agent to do it) - checks each acceptance criterion in `spec.md` against the actual diff.
-7. Log the round in `logs/token-ledger.md` (rough estimate is fine - the point is trend, not precision) and update `session-state.md` before ending the session.
+1. Copy `specs/template/` to `specs/00X-feature-name/`, or draft it from a source via
+   `skills/spec-builder.md`.
+2. Context-scan the area being touched (Step 0 of the relevant skill) before asking
+   anything — surface what already exists, fold findings into the clarification round.
+3. Map the flow (`context/flow-brief.md`), then resolve every `[NEEDS CLARIFICATION]`
+   marker in one batched round: "my understanding" to confirm, the relevant flow questions,
+   then the assumptions being proceeded on. Stop and ask again mid-work if the code
+   contradicts the flow map or a step has two readings.
+4. If the change touches a shared contract, run the cross-call-site impact analysis before
+   writing `tasks.md`.
+5. Implement task-by-task, checking the relevant `playbooks/<stack>.md` for the domain
+   being touched, referencing existing code by file:line.
+6. After each task, check acceptance criteria and run the applicable `memory/quality-gate.md`
+   checks — the gate applies at generation time too, not only at review.
+7. For review, `review/review-prompt.md` runs the same checklist against the same
+   quality-gate and playbooks — one standard, checked twice.
+8. Log the round in `logs/token-ledger.md` and update `session-state.md`.
 
 ## What this is not
 
-It's not a replacement for Spec-Kit at team scale - no CLI, no multi-agent config generation, no 30-tool compatibility matrix. It's a personal-scale scaffold, built to learn the mechanics of agentic dev workflows and to be genuinely useful for solo/small projects along the way.
+It's not a replacement for Spec-Kit at team scale — no CLI, no multi-agent config
+generation, no tool-by-tool compatibility matrix. It is a small, open toolkit of rules and
+scripts for solo developers and small teams; it never sends your code to any service.
+
+## Known environment gotchas
+
+- **Keep the working repo out of synced or sandboxed folders** (for example `~/Downloads`,
+  `~/Desktop` or cloud-synced directories). Some operating systems block command-line reads
+  there even after a grant (seen on macOS). Use a plain local path like `~/Projects/`.
+- **Scripts need Bash 3.2+ and POSIX tools** (macOS and Linux work; on Windows use WSL or
+  Git Bash). If `git` itself fails to run, put a working one first on `PATH`.

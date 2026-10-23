@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # refresh-context.sh
 #
-# Does NOT rewrite context/base-snapshot.md itself — that's the agent's job, since it
+# Does NOT rewrite context/base-snapshot.md itself - that's the agent's job, since it
 # requires actually reading/reasoning about what changed, not a mechanical operation.
 # This script's only job is the cheap part: show exactly what changed between the
 # snapshot's recorded commit and base_ref's current HEAD, so the refresh can be scoped
@@ -22,7 +22,7 @@ SNAPSHOT_COMMIT=$(grep -m1 '^snapshot_commit:' "$SNAPSHOT" | sed 's/^snapshot_co
 CURRENT_COMMIT=$(git -C "$PROJECT_ROOT" rev-parse "$BASE_REF")
 
 if [ -z "$SNAPSHOT_COMMIT" ] || [[ "$SNAPSHOT_COMMIT" == "<"* ]]; then
-  echo "No prior snapshot commit recorded — this is a first build, not an incremental"
+  echo "No prior snapshot commit recorded - this is a first build, not an incremental"
   echo "refresh. Scan the codebase fresh and fill in context/base-snapshot.md directly."
   exit 0
 fi
@@ -32,8 +32,8 @@ echo ""
 git -C "$PROJECT_ROOT" diff --stat "${SNAPSHOT_COMMIT}..${CURRENT_COMMIT}"
 echo ""
 echo "== Next step (agent, not this script) =="
-echo "Only re-check the snapshot sections whose area appears above — existing-extensions"
-echo "inventory, architectural patterns, naming conventions, hotspots — not the whole"
+echo "Only re-check the snapshot sections whose area appears above - existing-extensions"
+echo "inventory, architectural patterns, naming conventions, hotspots - not the whole"
 echo "file. Update context/base-snapshot.md's snapshot_commit to $CURRENT_COMMIT and"
 echo "captured_at to today once done, and add one line to its Build log noting this was"
 echo "an incremental refresh and what changed."

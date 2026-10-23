@@ -11,7 +11,7 @@
 
 ## Problem statement
 
-<One or two sentences — what and why, no implementation detail yet.>
+<One or two sentences - what and why, no implementation detail yet.>
 
 ## Existing-code context
 
@@ -20,7 +20,7 @@ check, 6 coverage gate"; `?` rows confirmed with: ...>
 
 **Reuse scan:** <ran `scripts/reuse-scan.sh --need "<words>"`; helpers I will use (Type.member, used Nx), or "none fit because ...". After coding, re-run on the diff and list each candidate: switched to the helper / kept because ...>
 
-<Populated before clarification, from the context-scan step — what already exists in this
+<Populated before clarification, from the context-scan step - what already exists in this
 area: relevant utilities/extensions, the established pattern for similar features, any
 centralized entry point (coordinator/adapter/manager) this should go through instead of a
 new inline path. Empty only if this is genuinely greenfield in this area.>
@@ -53,7 +53,7 @@ the PR description.>
 ## Open questions
 
 <Populated by the batched clarification round from the relevant skill file, or left by
-spec-builder where a source didn't resolve something. Remove once resolved — don't leave
+spec-builder where a source didn't resolve something. Remove once resolved - don't leave
 stale [NEEDS CLARIFICATION] markers around after they're answered.>
 
 | # | Question | Owner | Priority |
@@ -69,7 +69,7 @@ stale [NEEDS CLARIFICATION] markers around after they're answered.>
 
 ## Component / screen inventory
 
-<Optional — fill when the feature has a UI surface, especially when spec-builder drew this
+<Optional - fill when the feature has a UI surface, especially when spec-builder drew this
 from a design source. Name, purpose, key actions, data shown. Omit this section entirely
 for backend-only or non-UI changes rather than leaving it empty.>
 
@@ -78,8 +78,8 @@ for backend-only or non-UI changes rather than leaving it empty.>
 
 ## Interface mapping
 
-<Optional — fill when the feature involves external/internal API calls. Never list an
-endpoint that isn't confirmed against an actual API/schema source — unmapped actions go in
+<Optional - fill when the feature involves external/internal API calls. Never list an
+endpoint that isn't confirmed against an actual API/schema source - unmapped actions go in
 Gaps below, not fabricated here.>
 
 | Action | Method | Endpoint | Key fields | Notes |
@@ -87,8 +87,8 @@ Gaps below, not fabricated here.>
 
 ## Gaps
 
-<Anything a source didn't resolve or confirm — an action with no matching endpoint, a
-screen with no confirmed spec — stated explicitly rather than filled in with a guess.>
+<Anything a source didn't resolve or confirm - an action with no matching endpoint, a
+screen with no confirmed spec - stated explicitly rather than filled in with a guess.>
 
 ## Impact / blast radius
 
@@ -98,7 +98,7 @@ screen with no confirmed spec — stated explicitly rather than filled in with a
 |--------|--------|--------------------------------------|-------------------------------------------------------------|
 | <name> | <changed / removed / behavior> | <e.g. Features/Inbox (3 files), Tests (2)> | <...> |
 
-<Populated during investigation, before task breakdown — every other call site, consumer,
+<Populated during investigation, before task breakdown - every other call site, consumer,
 or downstream assumption this change touches, found via cross-call-site search, not
 assumption. Empty only after that search has actually been run and found nothing.>
 
@@ -123,5 +123,5 @@ rough size. Information for the developer; not a task, and not done in this chan
 
 ## Notes
 
-<Anything relevant discovered during investigation — existing patterns found, constraints
+<Anything relevant discovered during investigation - existing patterns found, constraints
 uncovered, etc.>

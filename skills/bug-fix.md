@@ -5,12 +5,12 @@ Use when the task is fixing broken/incorrect existing behavior.
 ## Trigger phrases
 "fix", "broken", "not working", "bug", "crash", "regression"
 
-## Step 0 — Already-fixed check (before investigating)
+## Step 0 - Already-fixed check (before investigating)
 
 Before planning any fix, check whether this is already solved: recent commit history and
 linked/merged PRs referencing the same issue. See `context/context-scan.md` for the exact
 mechanics. On high confidence the defect is already gone, confirm against the actual
-current code (not just the commit/PR evidence) and stop — don't generate a redundant fix.
+current code (not just the commit/PR evidence) and stop - don't generate a redundant fix.
 On low confidence, proceed, but note what was found.
 
 ## Understand the failing flow (before the batched round)
@@ -43,27 +43,27 @@ Lead with "my understanding" (the flow, where it breaks, the intended fix) for t
 to confirm, per `context/flow-brief.md` section 3. Then ask only what the scan and the
 ticket don't answer:
 
-0. **Expected behavior** — what should happen instead? (as in the ticket / different:
-   <describe> / not sure — propose from the flow)
-1. **Repro** — do you have exact repro steps, or should the agent investigate first?
+0. **Expected behavior** - what should happen instead? (as in the ticket / different:
+   <describe> / not sure - propose from the flow)
+1. **Repro** - do you have exact repro steps, or should the agent investigate first?
    (have steps / investigate from a stack trace or description / flaky, hard to repro)
-2. **Scope** — is the fix expected to touch one function, or could it be architectural?
-   (isolated / possibly wider — investigate blast radius first)
-3. **Regression risk** — is this area covered by tests already? (yes / no / unsure —
+2. **Scope** - is the fix expected to touch one function, or could it be architectural?
+   (isolated / possibly wider - investigate blast radius first)
+3. **Regression risk** - is this area covered by tests already? (yes / no / unsure
    check first)
-4. **Root cause vs. symptom** — patch the symptom now and file root-cause separately, or
+4. **Root cause vs. symptom** - patch the symptom now and file root-cause separately, or
    only fix if root cause is found? (patch now / root cause required)
 
 ## Investigation before fix
 
 For anything beyond a one-line fix: search for the actual failing code path first
 (file:line), don't guess from the bug description alone. State the root cause in one
-sentence before writing the fix — this is cheap and prevents fixing the wrong thing. Check
-the matching playbook entry (`scripts/playbook.sh find <keyword>`, then `show <ID>`) for a known-better-pattern matching this bug's shape —
+sentence before writing the fix - this is cheap and prevents fixing the wrong thing. Check
+the matching playbook entry (`scripts/playbook.sh find <keyword>`, then `show <ID>`) for a known-better-pattern matching this bug's shape
 a fix that reintroduces a documented incident is worse than a slow one.
 
 If the fix touches a shared contract (a delegate, hook, notification, protocol method,
-singleton entry point), run the cross-call-site check before writing the fix — see
+singleton entry point), run the cross-call-site check before writing the fix - see
 `memory/quality-gate.md`'s mandatory checks. Populate the spec's Impact / blast radius
 section if one exists for this fix.
 
@@ -76,16 +76,16 @@ assumption you recorded turns out false.
 ## Mid-implementation scope re-check
 
 If the fix, once you're actually in it, turns out to need touching a different layer or
-subsystem than the initial scope answer above assumed — real usage has hit this twice,
+subsystem than the initial scope answer above assumed - real usage has hit this twice,
 each time discovered only after implementing and needing a full revert once it had "gone
-too deep" — stop and confirm the wider scope with the person before continuing, rather
+too deep" - stop and confirm the wider scope with the person before continuing, rather
 than pushing through and finding out at the end. Catching a scope mismatch mid-fix is
 cheap; discovering it only after a completed, reverted attempt is not.
 
 ## While fixing
 
 - **Sibling-instance check.** After fixing the reported instance, grep the rest of the diff
-  and the surrounding file for the same bug shape — fixing one of two identical bugs and
+  and the surrounding file for the same bug shape - fixing one of two identical bugs and
   missing the other is a recurring, avoidable failure.
 - **Downstream-assumption check.** If the fix changes what a failure path does (a call that
   used to be fatal now logs and continues, or vice versa), re-read every subsequent line in
@@ -95,10 +95,10 @@ cheap; discovering it only after a completed, reverted attempt is not.
 
 - Confirm against spec/acceptance criteria if one exists for the affected feature.
 - Run the applicable checks from `memory/quality-gate.md` against the diff before calling
-  the fix done — scoped to the new/changed code, per the ratchet.
+  the fix done - scoped to the new/changed code, per the ratchet.
 - For a fix touching concurrency, ordering, or multi-store state cleanup: re-run the
   adversarial pattern search (not just build+test) after every round of edits in a
-  multi-round fix, not only the first commit — existing tests prove no regression, not
+  multi-round fix, not only the first commit - existing tests prove no regression, not
   that new logic is correct.
 - Note in `logs/token-ledger.md` if investigation required re-reading large files more
-  than once — that's a sign the codebase needs a better index/comment, flag it.
+  than once - that's a sign the codebase needs a better index/comment, flag it.

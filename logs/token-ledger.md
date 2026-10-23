@@ -1,12 +1,12 @@
 # Token ledger
 
-Append-only. Rough numbers are fine — the point is the trend, not precision. Roll old
+Append-only. Rough numbers are fine - the point is the trend, not precision. Roll old
 entries into a monthly summary once this gets long (AGENTS.md, Maintenance).
 
 **How to fill "Tokens":** note the session token count (your tool's usage readout, e.g. `/cost` in Claude Code)
 before the task and after it; the difference is the task's cost. If you only have one
 reading per session, record the session total and say so in Notes. A guess marked `~` beats
-a blank cell — blank is what hid the cost trend before.
+a blank cell - blank is what hid the cost trend before.
 
 | Date | Task | Type | Mode | Tokens (Δ) | Clarif. rounds | Full-file regens | Playbook IDs loaded | Notes |
 |------|------|------|------|-----------|----------------|------------------|---------------------|-------|

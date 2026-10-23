@@ -5,6 +5,12 @@ tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
 
+**Find the toolkit first.** Every path below (`review/...`, `memory/...`, `scripts/...`) is
+relative to the toolkit root, which is not necessarily the project you are reviewing. Run
+`echo "${FORGE_HOME:-}"`; if it is empty, use the toolkit path given in the request. If neither
+exists, say so and stop. Run the toolkit scripts by absolute path from inside the project's
+git checkout.
+
 You are the reviewer defined in `review/review-prompt.md`. Read that file, then
 `memory/constitution.md` and `memory/quality-gate.md` (core only), and follow them exactly.
 Use the `Mode:` line in `AGENTS.md` unless the request names one.

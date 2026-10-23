@@ -146,7 +146,7 @@ not done - say "not run: <reason>" rather than omitting it.
 Every finding:
 
 ```
-### [SEVERITY] Category — file:line
+### [SEVERITY] Category - file:line
 **Issue:** one-line description
 **Why it matters:** 1-2 sentences, concrete, not generic
 **Change required:** the exact change needed - concrete, diff-level instruction, with a

@@ -2,7 +2,7 @@
 # check-context-freshness.sh
 #
 # Cheap staleness check for cached context (context/base-snapshot.md, or any area note under
-# context/areas/ with the same frontmatter) — one git rev-parse and one
+# context/areas/ with the same frontmatter) - one git rev-parse and one
 # comparison, not a repo-wide scan. Tells the caller whether the cached snapshot is
 # still trustworthy or needs a refresh, and how far behind it is if not.
 #
@@ -23,7 +23,7 @@ SNAPSHOT="${1:-$REPO_ROOT/context/base-snapshot.md}"
 PROJECT_ROOT="${FORGE_PROJECT:-$(git rev-parse --show-toplevel 2>/dev/null || echo "$REPO_ROOT")}"
 
 if [ ! -f "$SNAPSHOT" ]; then
-  echo "[NO SNAPSHOT] $SNAPSHOT does not exist — build one before relying on cached context."
+  echo "[NO SNAPSHOT] $SNAPSHOT does not exist - build one before relying on cached context."
   exit 2
 fi
 
@@ -31,7 +31,7 @@ BASE_REF=$(grep -m1 '^base_ref:' "$SNAPSHOT" | sed 's/^base_ref: *//' | xargs)
 SNAPSHOT_COMMIT=$(grep -m1 '^snapshot_commit:' "$SNAPSHOT" | sed 's/^snapshot_commit: *//' | xargs)
 
 if [ -z "$BASE_REF" ] || [ -z "$SNAPSHOT_COMMIT" ] || [[ "$SNAPSHOT_COMMIT" == "<"* ]]; then
-  echo "[NO SNAPSHOT] $SNAPSHOT exists but has no recorded commit yet — build it before use."
+  echo "[NO SNAPSHOT] $SNAPSHOT exists but has no recorded commit yet - build it before use."
   exit 2
 fi
 

@@ -107,7 +107,7 @@ task/spec is not marked done.
 ## Mandatory checks (never conditional on being asked)
 
 These stopped being "only if the reviewer thinks to check" the moment they became a
-standing part of the gate. Both generation and review run them by default, every time —
+standing part of the gate. Both generation and review run them by default, every time
 but **not at the same depth for everything touched**. Scope the depth to the risk, not
 uniformly to every line:
 
@@ -118,16 +118,16 @@ uniformly to every line:
 - **Low-risk code gets a lighter, explicitly-scoped check**: a private helper used only
   within the file/module being changed, with no external callers and no involvement in the
   domains above, gets a check scoped to that file/module rather than a repo-wide search.
-  This is a real narrowing, not a silent skip — say so in one line ("scoped to file-local:
+  This is a real narrowing, not a silent skip - say so in one line ("scoped to file-local:
   no external callers, not security/persistence/concurrency") so the choice is visible,
   same discipline as disclosing a partial review on an oversized diff.
 - When it's genuinely unclear which tier something falls in, default to the high-risk
-  treatment once, not every time going forward — note the ambiguity so it's cheaper to
+  treatment once, not every time going forward - note the ambiguity so it's cheaper to
   resolve on the next pass (e.g. confirm via a repo-map or naming convention whether a
   given module is ever exposed outside its own file).
 
 This scoping exists because thoroughness and token cost are a real tradeoff, not a solved
-problem — the point isn't to cut corners on what actually matters, it's to stop spending
+problem - the point isn't to cut corners on what actually matters, it's to stop spending
 the same exhaustive budget on code that was never at risk in the first place.
 
 - **Cross-call-site check.** (Method: local reference lookup if available, else

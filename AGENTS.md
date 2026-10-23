@@ -2,7 +2,7 @@
 
 Mode: strict
 
-<!-- strict | standard | fast — see `memory/quality-gate.md` "Check depth mode". -->
+<!-- strict | standard | fast - see `memory/quality-gate.md` "Check depth mode". -->
 
 Single entry point for any agent (the open `AGENTS.md` convention). `CLAUDE.md` only imports
 this file for tools that look for that name, so there is one copy to maintain. Kept short on
@@ -33,13 +33,13 @@ one section of `memory/quality-gate-detail.md` when applying a check in depth;
    the map. Then run the matching skill's Step 0 scan for the area, and record `Map
    consulted` in the spec. Order: map -> flow -> questions -> code.
 3. Map the flow the change plugs into and turn what is unclear into questions
-   (`context/flow-brief.md`): read what code can answer, then ask in ONE batched round —
+   (`context/flow-brief.md`): read what code can answer, then ask in ONE batched round
    "my understanding" to confirm, the relevant flow questions, the assumptions. Resolve
    every `[NEEDS CLARIFICATION]` marker there, not serially. Stop and ask again mid-work if
    the code contradicts the flow map or a step has two readings. For every new type, file, parameter or flag, fill the spec's "Decisions & why" (reader, existing mechanism, why not derive it, honest scope); it becomes the PR description.
-4. Pick the one matching skill file — read only that one.
+4. Pick the one matching skill file - read only that one.
 5. If the change touches a shared contract, run the cross-call-site impact analysis before
-   task breakdown (mandatory — `memory/quality-gate.md`; `scripts/xref.sh` or a local reference tool).
+   task breakdown (mandatory - `memory/quality-gate.md`; `scripts/xref.sh` or a local reference tool).
    For every declaration you change or remove, run `scripts/impact.sh --symbols <names>`; before
    writing a helper, `scripts/reuse-scan.sh --need "<words>"`; re-run both on your diff afterwards.
 
@@ -74,11 +74,11 @@ one section of `memory/quality-gate-detail.md` when applying a check in depth;
 
 ## Token economy
 
-No exploratory tool calls — every call has a purpose; get paths and line numbers back, not
+No exploratory tool calls - every call has a purpose; get paths and line numbers back, not
 file contents; open only the range needed. Don't re-read unchanged content already in
 context. Filter large output by keyword or a tool's structured summary, never blind
 `tail`/`head`. Keep this file, the constitution and the gate unedited within a session
-(they are the cacheable prefix). Fresh session per distinct task — every turn resends the
+(they are the cacheable prefix). Fresh session per distinct task - every turn resends the
 transcript. Parallel/sub-agents multiply reading cost: default to one pass; if splitting,
 cheapest capable model for triage/listing, strongest only for bug-finding and confirming a
 flagged bug, and ask for paths and conclusions back.
@@ -101,13 +101,15 @@ Use `skills/session-report.md` for one consolidated report after several tasks/r
 Rules unverified for a long stretch get re-verified. Every rule costs tokens each time it
 loads, so rules and playbook entries that go unused or get overridden repeatedly are
 candidates for removal. New recurring bug shapes get a Seen/Action entry in the relevant
-`playbooks/<stack>.md` (`playbooks/_template.md`) — only after they actually happen. While
+`playbooks/<stack>.md` (`playbooks/_template.md`) - only after they actually happen. While
 dogfooding, log one entry in `logs/test-runs.md` per real task. Savings or recall claims are
 measured with `evals/README.md`, not estimated.
 
 **Where state lives.** When the toolkit is the project, `specs/`, `logs/` and `session-state.md`
 sit beside this file; when it is kept outside the project, they live in the project under
-`.forge/`. Templates, playbooks, scripts and skills are always read from the toolkit.
+`.forge/`. Templates, playbooks, scripts and skills are always read from the toolkit. Paths in these files
+are relative to the toolkit root; when it is kept outside the project, `FORGE_HOME` names it
+(`export FORGE_HOME=~/Apps/Forge-guide`) and scripts are run by absolute path.
 
 ## Working agreement
 

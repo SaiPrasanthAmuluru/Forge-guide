@@ -3,7 +3,7 @@
 #
 # Lightweight staleness check: greps the current repo for patterns referenced in
 # skills/*.md and constitution.md, and flags any rule whose last-verified date is
-# older than the threshold below. Does NOT attempt to auto-fix anything — it only
+# older than the threshold below. Does NOT attempt to auto-fix anything - it only
 # flags candidates for human/agent review, per the "explicit, versioned, reviewed"
 # discipline this repo is built around.
 #
@@ -23,10 +23,10 @@ for file in "$REPO_ROOT"/memory/constitution.md "$REPO_ROOT"/skills/*.md; do
   grep -no 'last-verified: [0-9-]*' "$file" | while IFS=: read -r lineno _ date; do
     date_str=$(echo "$date" | xargs)
     if [ "$date_str" = "<date>" ] || [ -z "$date_str" ]; then
-      echo "  [UNSET]  $(basename "$file"):$lineno — no last-verified date set"
+      echo "  [UNSET]  $(basename "$file"):$lineno - no last-verified date set"
       continue
     fi
-    # GNU date (Linux) first, BSD date (macOS) as fallback — same pattern as
+    # GNU date (Linux) first, BSD date (macOS) as fallback - same pattern as
     # shared/lib.sh's calculate_relative_time.
     if date --version >/dev/null 2>&1; then
       rule_epoch=$(date -d "$date_str" +%s 2>/dev/null || echo 0)
@@ -34,12 +34,12 @@ for file in "$REPO_ROOT"/memory/constitution.md "$REPO_ROOT"/skills/*.md; do
       rule_epoch=$(date -j -f "%Y-%m-%d" "$date_str" +%s 2>/dev/null || echo 0)
     fi
     if [ "$rule_epoch" -eq 0 ]; then
-      echo "  [BADFMT] $(basename "$file"):$lineno — unparseable date: $date_str"
+      echo "  [BADFMT] $(basename "$file"):$lineno - unparseable date: $date_str"
       continue
     fi
     age_days=$(( (NOW_EPOCH - rule_epoch) / 86400 ))
     if [ "$age_days" -gt "$THRESHOLD_DAYS" ]; then
-      echo "  [STALE]  $(basename "$file"):$lineno — ${age_days} days old"
+      echo "  [STALE]  $(basename "$file"):$lineno - ${age_days} days old"
     fi
   done
 done

@@ -3,7 +3,7 @@
 #
 # Basic verification-loop gate: confirms every acceptance criterion in a spec's
 # verification.md has been explicitly marked PASS before the spec can be considered
-# done. This is intentionally dumb (checkbox/PASS-FAIL parsing, not test execution) —
+# done. This is intentionally dumb (checkbox/PASS-FAIL parsing, not test execution)
 # it's a guardrail against "it compiles" being mistaken for "it's verified", not a
 # replacement for actually running tests.
 #
@@ -55,7 +55,7 @@ fi
 
 if [ "$UNCHECKED" -gt 0 ] || [ "$CONF_MISSING" -eq 1 ] || [ "$FAILS" -gt 0 ] || [ "$MAP_MISSING" -eq 1 ] || [ "$SCANS_MISSING" -eq 1 ]; then
   echo ""
-  echo "NOT VERIFIED — resolve unchecked items and FAILs before marking spec.md done."
+  echo "NOT VERIFIED - resolve unchecked items and FAILs before marking spec.md done."
   exit 1
 else
   echo ""

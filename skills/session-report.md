@@ -32,7 +32,7 @@ analysis pass.
 ## Report structure
 
 ```markdown
-# Session report — <date range or session label>
+# Session report - <date range or session label>
 
 ## Overview
 - Tasks covered: <N> (bug fixes: <n>, new features: <n>, reviews: <n>)
@@ -40,12 +40,12 @@ analysis pass.
 
 ## Per-task summary
 
-### <Task 1 name> — <skill used> — <outcome: done/blocked/in-progress>
+### <Task 1 name> - <skill used> - <outcome: done/blocked/in-progress>
 - Spec: `specs/<folder>/spec.md`
 - One-line what changed and why
 - Quality-gate outcome: <severities that fired>, <any suppressions and why>
 - Verdict (if a review): <Approve / Approve with comments / Request changes>, per the
-  mechanical gate rule in `memory/quality-gate.md` — never softened by overall impression
+  mechanical gate rule in `memory/quality-gate.md` - never softened by overall impression
 
 <repeat per task>
 
@@ -78,10 +78,10 @@ not silently accepting as normal.
   unchanged diff or file re-read, a Mode change (`standard` → `strict`), a stale
   `context/base-snapshot.md` forcing a wide re-scan.
 - If the ledger has no token figures for work this report covers, say so and give a rough
-  estimate marked `~` — don't write "not tracked" and move on; that is how the trend
+  estimate marked `~` - don't write "not tracked" and move on; that is how the trend
   stayed invisible.
 - Total clarification rounds this session: <n>
-- Full-file regenerations: <n> (flag any — this is what the workflow exists to avoid)
+- Full-file regenerations: <n> (flag any - this is what the workflow exists to avoid)
 - Any task where investigation required re-reading the same large file multiple times
 
 ## Where the tokens went (task and phase)
@@ -159,7 +159,7 @@ one line rather than leaving the reader to infer it.
 - Anything that felt like the workflow got in the way, asked something already-answerable,
   or where the gate's verdict and the reviewer's own judgment disagreed (see the run where
   this happened before - keep watching for it)
-- Any tool/environment gap hit (not a forge-guide design issue, but worth recording) —
+- Any tool/environment gap hit (not a forge-guide design issue, but worth recording)
   e.g. a permission wall, a parsing failure in a script, a missing local tool
 
 ## Open items carried forward
@@ -169,7 +169,7 @@ one line rather than leaving the reader to infer it.
 
 ## Lightweight variant: a batch of ad hoc fixes with no natural spec
 
-Some sessions don't fit the structure above at all — a string of independent one-error-at-
+Some sessions don't fit the structure above at all - a string of independent one-error-at-
 a-time compile fixes pasted in by the person after a local build, a merge-conflict
 resolution, an environment/runtime diagnosis with no ticket behind it. Forcing the full
 per-task/spec/quality-gate structure onto this shape produces a report that's mostly "not
@@ -179,7 +179,7 @@ form instead when there's no spec, no review pass, and the work is a batch of sm
 independent fixes rather than a feature/bug-fix/review task:
 
 ```markdown
-# Session report — <date range or session label> (lightweight)
+# Session report - <date range or session label> (lightweight)
 
 ## Overview
 - Shape: ad hoc fix batch (no specs/ folder, no review pass this session)
@@ -193,13 +193,13 @@ independent fixes rather than a feature/bug-fix/review task:
 
 ## Notable findings surfaced incidentally
 (dead code removed, a merge leaving a stale reference, a real bug found while fixing
-something else — anything worth a playbook entry, even though no review pass was run)
+something else - anything worth a playbook entry, even though no review pass was run)
 
 ## Playbook activity
 - New entries proposed but not yet added: <list with drafted Seen/Action>
 
 ## Review misses & development misjudgments (self-assessment)
-(same rules as the full report — include whenever something was missed on a first pass, or
+(same rules as the full report - include whenever something was missed on a first pass, or
 whenever asked)
 
 ## Friction / design feedback
@@ -207,9 +207,9 @@ whenever asked)
 ```
 
 Still apply the mandatory-check discipline from `memory/quality-gate.md` to work covered by
-this shape — a merge resolution still needs the post-merge signature-compatibility check, a
+this shape - a merge resolution still needs the post-merge signature-compatibility check, a
 dismissed-as-unrelated test failure still needs independent diagnosis before being called
-that — the lightweight report format is about the *report's* structure, not a lighter bar
+that - the lightweight report format is about the *report's* structure, not a lighter bar
 for the work itself. Still backfill `logs/token-ledger.md`/`logs/test-runs.md` per the rule
 below; a session with no spec is not exempt from that.
 
@@ -231,7 +231,7 @@ below; a session with no spec is not exempt from that.
   severities differently here than the review itself used.
 - **Keep it to what actually happened.** If a section has nothing for it (no suppressions
   used, no new playbook entries), write "none this session" rather than omitting the
-  section — a missing section reads as "forgot to check," not "nothing to report."
+  section - a missing section reads as "forgot to check," not "nothing to report."
 
 ## Map additions (every report)
 

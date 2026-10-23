@@ -1,10 +1,10 @@
 # Verification: <feature name>
 
 Run after implementation, before marking the spec done. Go through every acceptance
-criterion from `spec.md` explicitly — "it compiles" and "it runs" are not verification.
+criterion from `spec.md` explicitly - "it compiles" and "it runs" are not verification.
 
-- [ ] Criterion 1 — <how it was checked: test / manual trace / repro> — PASS/FAIL
-- [ ] Criterion 2 — <how it was checked> — PASS/FAIL
+- [ ] Criterion 1 - <how it was checked: test / manual trace / repro> - PASS/FAIL
+- [ ] Criterion 2 - <how it was checked> - PASS/FAIL
 
 ## Independent pass (recommended before the developer raises a PR - see memory/quality-gate.md)
 
@@ -19,7 +19,7 @@ criterion from `spec.md` explicitly — "it compiles" and "it runs" are not veri
 
 ## Divergences
 
-<Any place implementation differs from the spec — either the spec was wrong (update it) or
+<Any place implementation differs from the spec - either the spec was wrong (update it) or
 the implementation needs fixing. Never leave a silent divergence unrecorded.>
 
 ## Security check (if HARD constitution rules apply)

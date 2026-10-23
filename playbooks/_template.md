@@ -32,9 +32,9 @@ not a generic description>
 **Action:** <the concrete rule - what to do instead, stated as an instruction>
 ```
 
-- `<PREFIX>` — a short stack tag (e.g. `AND` for Android/Kotlin, `TS` for TypeScript/Node,
-  `PY` for Python). Keep IDs stable once assigned — other files may reference them.
-- `<SEVERITY>` — one of CRITICAL/HIGH/MEDIUM/LOW/NIT per `memory/quality-gate.md`.
+- `<PREFIX>` - a short stack tag (e.g. `AND` for Android/Kotlin, `TS` for TypeScript/Node,
+  `PY` for Python). Keep IDs stable once assigned - other files may reference them.
+- `<SEVERITY>` - one of CRITICAL/HIGH/MEDIUM/LOW/NIT per `memory/quality-gate.md`.
 - Number sequentially; don't renumber existing entries when adding new ones.
 
 ## Required section: platform/language currency

@@ -2,7 +2,7 @@
 
 > Forge code with intention. Guide it with review.
 
-A lean, token-conscious spec-driven workflow for AI coding agents — forges code from a
+A lean, token-conscious spec-driven workflow for AI coding agents - forges code from a
 gated spec, then guides it through a strict, single-pass review before it ships.
 
 Built on the Spec-Driven Development (SDD) idea, and grown from real review and generation incidents rather than theory. It is plain Markdown
@@ -73,52 +73,52 @@ handling **rule staleness** as a codebase evolves. It does this without heavy ce
 
 ## The pillars
 
-1. **Spec-gate** — no code is generated until a spec exists and open questions are resolved.
-2. **Lean ceremony** — `spec.md` + `tasks.md` only. No separate `plan.md` layer unless a
+1. **Spec-gate** - no code is generated until a spec exists and open questions are resolved.
+2. **Lean ceremony** - `spec.md` + `tasks.md` only. No separate `plan.md` layer unless a
    task genuinely needs one.
-3. **Token economy** — clarifying questions are batched and selectable (menu-style, not
+3. **Token economy** - clarifying questions are batched and selectable (menu-style, not
    freeform back-and-forth); every session logs an entry in `logs/token-ledger.md`.
-4. **Trust tiers** — every constitution/skill rule is tagged `HARD`/`DEFAULT`/`SUGGESTED`.
+4. **Trust tiers** - every constitution/skill rule is tagged `HARD`/`DEFAULT`/`SUGGESTED`.
    Nothing is flat-priority.
-5. **Staleness / drift detection** — rules carry a `last-verified` date and get re-checked
+5. **Staleness / drift detection** - rules carry a `last-verified` date and get re-checked
    against the live codebase, not trusted indefinitely.
-6. **Verification loop** — implementation is checked against acceptance criteria, not just
-   "did it compile" — and re-checked after every round of edits, not only the first.
-7. **Security hygiene** — a standing HARD-tier check: no hardcoded secrets, no PII in logs,
+6. **Verification loop** - implementation is checked against acceptance criteria, not just
+   "did it compile" - and re-checked after every round of edits, not only the first.
+7. **Security hygiene** - a standing HARD-tier check: no hardcoded secrets, no PII in logs,
    no bypassing established auth/keychain patterns.
-8. **Session-state handoff** — a short, structured "where I left off," not a transcript.
-9. **Context-first generation** — before writing anything, scan what already exists in the
+8. **Session-state handoff** - a short, structured "where I left off," not a transcript.
+9. **Context-first generation** - before writing anything, scan what already exists in the
    area being touched: existing utilities/extensions, established patterns, centralized
    entry points to reuse instead of duplicating. Also checks whether the problem is already
    solved before generating a redundant fix.
-10. **Impact / blast-radius analysis** — before task breakdown, trace every consumer/call-
-    site a change touches — the class of bug ("this hook is reused for something else
+10. **Impact / blast-radius analysis** - before task breakdown, trace every consumer/call-
+    site a change touches - the class of bug ("this hook is reused for something else
     elsewhere") that a diff-only read never catches.
-11. **Ultra-strict quality gate, scoped by a ratchet** — CRITICAL/HIGH findings always
+11. **Ultra-strict quality gate, scoped by a ratchet** - CRITICAL/HIGH findings always
     block; the gate applies to new/changed code only, not an entire legacy file, so it's
     adoptable on a real existing codebase instead of failing everything on day one.
-12. **Playbooks, not just principles** — known-better-patterns grounded in real incidents
+12. **Playbooks, not just principles** - known-better-patterns grounded in real incidents
     (Seen → Action), shared verbatim between generation and review so the two standards
-    never drift apart. Multi-stack from the start via `playbooks/_template.md` — but a new
+    never drift apart. Multi-stack from the start via `playbooks/_template.md` - but a new
     stack playbook starts empty and grows only from real incidents, never invented ones.
-13. **Agent- and language-agnostic** — `AGENTS.md` (the open convention read by many agent
+13. **Agent- and language-agnostic** - `AGENTS.md` (the open convention read by many agent
     tools) is the single entry point; `CLAUDE.md` just imports it for tools that look for
     that name. Rules, playbooks and scripts are plain files with no tool-specific
-    dependency; stack lessons are per-language playbooks. Both entry files stay short on purpose — evidence shows bloated or
+    dependency; stack lessons are per-language playbooks. Both entry files stay short on purpose - evidence shows bloated or
     LLM-expanded instruction files hurt agent performance and inflate cost rather than
     helping.
-14. **Platform / language currency check** — generalized past iOS: every ecosystem has its
+14. **Platform / language currency check** - generalized past iOS: every ecosystem has its
     own deprecation lifecycle, checked against the project's own declared minimum target,
     preferring existing ecosystem tooling over reasoning from memory on a fast-moving
     surface.
-15. **Cached base context, refreshed only when it moves** — general "what already exists
+15. **Cached base context, refreshed only when it moves** - general "what already exists
     in this codebase" knowledge (extensions, patterns, conventions) is captured once
     against a specific commit and reused until `main` actually moves, instead of being
     re-derived from scratch on every task. Diff-specific checks (cross-call-site, verify-
-    before-asserting) always still run live — only the general, stable knowledge is
+    before-asserting) always still run live - only the general, stable knowledge is
     cached.
 
-16. **Lean rule loading + check-depth modes** — rules are loaded by need, not by default:
+16. **Lean rule loading + check-depth modes** - rules are loaded by need, not by default:
     a ~2K-token core gate always, playbook entries one-by-one via `scripts/playbook.sh`,
     rationale files only on demand. A `Mode: strict | standard | fast` line sets how much is
     searched and re-checked without ever changing severities or the verdict. Reviews run
@@ -137,7 +137,7 @@ Rules loaded before any work starts, estimated at ~4 bytes per token:
 
 Biggest single item: the playbook was ~8.4K tokens read whole; its index is ~0.85K and each
 entry ~0.25K, so a task touching three domains pays ~1.6K. These are file-size estimates,
-not measured session totals — `logs/token-ledger.md` is where the real numbers go, and
+not measured session totals - `logs/token-ledger.md` is where the real numbers go, and
 `evals/` is the protocol for turning them into a with/without comparison (tokens per task,
 recall on known issues, false positives).
 
@@ -192,8 +192,8 @@ Forge-guide/
 │   ├── phase-log.sh          # tokens, files read and cause per phase (map/flow/scans/generate/review/rework)
 │   ├── finding-log.sh        # one row per finding: who found it, status, which check should have
 │   ├── report-metrics.sh     # reads the three ledgers: tokens by type/phase, escapes, precision, playbook hits
-│   ├── playbook.sh           # index / show <ID> / find <kw> — read playbook entries, not the file
-│   ├── diff-scope.sh         # review pre-filter: read order, skips, budget — from numstat only
+│   ├── playbook.sh           # index / show <ID> / find <kw> - read playbook entries, not the file
+│   ├── diff-scope.sh         # review pre-filter: read order, skips, budget - from numstat only
 │   ├── drift-check.sh
 │   ├── verify-spec.sh
 │   ├── check-context-freshness.sh  # cheap staleness check for base-snapshot.md
@@ -260,7 +260,8 @@ a helper already exists" into steps with output, so they are not skipped under p
 
 ## Using the toolkit from outside your project
 
-Keep one clone of this repo (say `~/Tools/Forge-guide`) and start your agent from the
+Keep one clone of this repo (say `~/Tools/Forge-guide`), set `export FORGE_HOME=~/Tools/Forge-guide`
+in your shell profile (the reviewer subagent reads it to find the rules), and start your agent from the
 *project*, with the toolkit readable as a reference (an extra directory, a workspace folder,
 or by absolute path). Scripts run by absolute path from inside the project and use that
 project's git.
@@ -341,7 +342,7 @@ Nothing here is estimated by the scripts: blank figures are left out, not guesse
 1. Copy `specs/template/` to `specs/00X-feature-name/`, or draft it from a source via
    `skills/spec-builder.md`.
 2. Context-scan the area being touched (Step 0 of the relevant skill) before asking
-   anything — surface what already exists, fold findings into the clarification round.
+   anything - surface what already exists, fold findings into the clarification round.
 3. Map the flow (`context/flow-brief.md`), then resolve every `[NEEDS CLARIFICATION]`
    marker in one batched round: "my understanding" to confirm, the relevant flow questions,
    then the assumptions being proceeded on. Stop and ask again mid-work if the code
@@ -351,9 +352,9 @@ Nothing here is estimated by the scripts: blank figures are left out, not guesse
 5. Implement task-by-task, checking the relevant `playbooks/<stack>.md` for the domain
    being touched, referencing existing code by file:line.
 6. After each task, check acceptance criteria and run the applicable `memory/quality-gate.md`
-   checks — the gate applies at generation time too, not only at review.
+   checks - the gate applies at generation time too, not only at review.
 7. For review, `review/review-prompt.md` runs the same checklist against the same
-   quality-gate and playbooks — one standard, checked twice.
+   quality-gate and playbooks - one standard, checked twice.
 8. Log the round in `logs/token-ledger.md` and update `session-state.md`.
 
 ## What this is not

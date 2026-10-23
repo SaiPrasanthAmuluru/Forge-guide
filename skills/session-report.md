@@ -159,7 +159,7 @@ one line rather than leaving the reader to infer it.
 - Anything that felt like the workflow got in the way, asked something already-answerable,
   or where the gate's verdict and the reviewer's own judgment disagreed (see the run where
   this happened before - keep watching for it)
-- Any tool/environment gap hit (not a forge-guide design issue, but worth recording)
+- Any tool/environment gap hit (not a forge-guide design issue, but worth recording) -
   e.g. a permission wall, a parsing failure in a script, a missing local tool
 
 ## Open items carried forward

@@ -37,7 +37,7 @@ to confirm, per `context/flow-brief.md` section 3, and apply its stop-and-ask ru
 
 1. **Behavior contract** - must output be byte-identical, or is minor behavior drift
    acceptable if it's arguably more correct? (must be identical / minor drift OK if noted)
-2. **Test safety net** - are there existing tests to confirm no regression? (yes / no
+2. **Test safety net** - are there existing tests to confirm no regression? (yes / no -
    write characterization tests first / no tests, proceed carefully)
 3. **Scope boundary** - single file, module, or does this cascade? (single file / module /
    unsure - map dependents first, using the Step 0 scan above)

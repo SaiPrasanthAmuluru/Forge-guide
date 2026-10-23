@@ -49,7 +49,7 @@ ticket don't answer:
    (have steps / investigate from a stack trace or description / flaky, hard to repro)
 2. **Scope** - is the fix expected to touch one function, or could it be architectural?
    (isolated / possibly wider - investigate blast radius first)
-3. **Regression risk** - is this area covered by tests already? (yes / no / unsure
+3. **Regression risk** - is this area covered by tests already? (yes / no / unsure -
    check first)
 4. **Root cause vs. symptom** - patch the symptom now and file root-cause separately, or
    only fix if root cause is found? (patch now / root cause required)
@@ -59,7 +59,7 @@ ticket don't answer:
 For anything beyond a one-line fix: search for the actual failing code path first
 (file:line), don't guess from the bug description alone. State the root cause in one
 sentence before writing the fix - this is cheap and prevents fixing the wrong thing. Check
-the matching playbook entry (`scripts/playbook.sh find <keyword>`, then `show <ID>`) for a known-better-pattern matching this bug's shape
+the matching playbook entry (`scripts/playbook.sh find <keyword>`, then `show <ID>`) for a known-better-pattern matching this bug's shape -
 a fix that reintroduces a documented incident is worse than a slow one.
 
 If the fix touches a shared contract (a delegate, hook, notification, protocol method,

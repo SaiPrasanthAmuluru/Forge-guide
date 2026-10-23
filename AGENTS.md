@@ -33,7 +33,7 @@ one section of `memory/quality-gate-detail.md` when applying a check in depth;
    the map. Then run the matching skill's Step 0 scan for the area, and record `Map
    consulted` in the spec. Order: map -> flow -> questions -> code.
 3. Map the flow the change plugs into and turn what is unclear into questions
-   (`context/flow-brief.md`): read what code can answer, then ask in ONE batched round
+   (`context/flow-brief.md`): read what code can answer, then ask in ONE batched round -
    "my understanding" to confirm, the relevant flow questions, the assumptions. Resolve
    every `[NEEDS CLARIFICATION]` marker there, not serially. Stop and ask again mid-work if
    the code contradicts the flow map or a step has two readings. For every new type, file, parameter or flag, fill the spec's "Decisions & why" (reader, existing mechanism, why not derive it, honest scope); it becomes the PR description.

@@ -107,7 +107,7 @@ task/spec is not marked done.
 ## Mandatory checks (never conditional on being asked)
 
 These stopped being "only if the reviewer thinks to check" the moment they became a
-standing part of the gate. Both generation and review run them by default, every time
+standing part of the gate. Both generation and review run them by default, every time -
 but **not at the same depth for everything touched**. Scope the depth to the risk, not
 uniformly to every line:
 

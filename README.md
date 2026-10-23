@@ -5,8 +5,7 @@
 A lean, token-conscious spec-driven workflow for AI coding agents — forges code from a
 gated spec, then guides it through a strict, single-pass review before it ships.
 
-Inspired by GitHub Spec-Kit and the broader Spec-Driven Development (SDD) pattern, and
-grown from real review and generation incidents rather than theory. It is plain Markdown
+Built on the Spec-Driven Development (SDD) idea, and grown from real review and generation incidents rather than theory. It is plain Markdown
 plus dependency-free shell scripts: it works with any AI coding agent, any language and any
 Git host.
 
@@ -66,12 +65,11 @@ Optional adapters: a Claude Code reviewer subagent and a PR-gate hook are includ
 
 ## Why this exists
 
-Most SDD frameworks (Spec-Kit, BMAD, Superpowers) solve **consistency** — making sure the
-agent doesn't contradict itself or invent scope. None of them optimize for **cost**, none
-verify the implementation actually satisfies the spec afterward, none check whether
-generated code duplicates or breaks something that already exists, and none handle rule
-staleness as a codebase evolves. This project closes those gaps without the ceremony
-overhead built for 40-engineer teams.
+Spec-driven workflows usually aim at **consistency**: the agent should not contradict itself
+or invent scope. Forge-guide also covers what they tend to leave out: keeping **cost** down
+and measured, **verifying** afterwards that the implementation satisfies the spec, checking
+that generated code does not **duplicate or break** something that already exists, and
+handling **rule staleness** as a codebase evolves. It does this without heavy ceremony.
 
 ## The pillars
 
@@ -358,9 +356,16 @@ Nothing here is estimated by the scripts: blank figures are left out, not guesse
 
 ## What this is not
 
-It's not a replacement for Spec-Kit at team scale — no CLI, no multi-agent config
-generation, no tool-by-tool compatibility matrix. It is a small, open toolkit of rules and
+It has no CLI, no config generation and no tool-by-tool compatibility matrix. It is a small, open toolkit of rules and
 scripts for solo developers and small teams; it never sends your code to any service.
+
+## Licence and names
+
+MIT licensed (see `LICENSE`). Product and company names that appear (Git hosts, build tools,
+agent tools, platform vendors) are used only to say what the scripts and rules work with;
+no affiliation or endorsement is implied. Playbook entries describe patterns in original
+wording, with illustrative identifiers rather than any employer's code. Contributions must
+not include proprietary code, internal names or text copied from other projects.
 
 ## Known environment gotchas
 

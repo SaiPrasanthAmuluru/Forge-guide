@@ -372,7 +372,7 @@ capturing a local `var` or a non-`Sendable` iterator directly inside a `@Sendabl
 
 **Seen:** During a `main` merge into a long-running branch, a view model's API extension
 kept calling a use case method as if it still returned the pre-merge model
-(`CommentModel` with a `referencedUserIdentifiers` property), when `main` had
+(`NoteModel` with a `referencedUserIDs` property), when `main` had
 changed that method's return type to a tuple and moved author resolution into the
 repository. No textual merge conflict fired on this file - it merged cleanly and then failed
 to compile, which is exactly the case a "resolve the conflicts" pass doesn't catch, because
@@ -460,7 +460,7 @@ gone/changed, never trust exit code or a format validator alone.
 ### IOS-034 - A completion-hook parameter can silently change a view's own dismiss behavior for every caller that passes one [HIGH]
 
 **Seen:** A detail view popped itself automatically, but only in the branch where no
-completion hook (`onRequestActionCompleted`-shaped closure) was passed in; once any caller
+completion hook (`onActionCompleted`-shaped closure) was passed in; once any caller
 started passing that hook (to react to the completion itself), the view's own self-pop
 branch was skipped on the assumption the caller would now handle navigation - but the caller
 didn't, leaving the screen open after an action that should have dismissed it.
@@ -472,8 +472,8 @@ the hook opts out of auto-dismiss and callers must handle it themselves.
 
 ### IOS-035 - Deleting a legacy screen needs its privilege/permission checks grepped and confirmed present in the replacement [HIGH]
 
-**Seen:** A legacy view model enforced privilege-gated actions (e.g. `allowCancelA`,
-`allowCancelB` controlling whether a cancel action was shown) that existed only in that
+**Seen:** A legacy view model enforced privilege-gated actions (e.g. `allowActionA`,
+`allowActionB` controlling whether a cancel action was shown) that existed only in that
 legacy code - not yet ported to the replacement screen being built to retire it. Found
 during a parity check partway through the retirement, not before it started, because the
 first pass checked navigation/feature parity but not permission-check parity specifically.
@@ -520,8 +520,8 @@ requirement would allow.
 ### IOS-039 - A new call site of an existing initializer must be diffed against every existing call site [HIGH]
 
 **Seen:** A deep-link route built a detail display model without
-`currentAuthorIdentifier`, which every feed route passes; header and comment rights
-broke. Earlier in the same line of work a rebuilt deep link also dropped `showApprovalActions`
+`currentUserID`, which every feed route passes; header and comment rights
+broke. Earlier in the same line of work a rebuilt deep link also dropped `showPrivilegedActions`
 and the status the legacy call received, losing the approver case. Both found by human
 reviewers, not by the author's checks.
 **Action:** For every new construction of a type or call of an API that other routes already
@@ -540,7 +540,7 @@ it first, make the consumer observe it, or delay building the consumer until it 
 
 ### IOS-041 - When a field's source changes, sweep every test that asserts that field [MEDIUM]
 
-**Seen:** Sending parsed tags instead of `mentionData.mentions` broke an existing converter
+**Seen:** Sending parsed tags instead of `tagData.tags` broke an existing converter
 test in CI that the author had not run or searched for.
 **Action:** After changing where a field's value comes from or what it means, grep the test
 targets for every assertion on that field and classify each as still valid, to update, or

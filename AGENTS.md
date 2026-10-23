@@ -4,7 +4,7 @@ Mode: strict
 
 <!-- strict | standard | fast — see `memory/quality-gate.md` "Check depth mode". -->
 
-Cross-tool entry point (the open convention stewarded by the Agentic AI Foundation) for any
+Cross-tool entry point (the open `AGENTS.md` convention) for any
 agent. Tools that look for `CLAUDE.md` instead get the same content from that file, so the
 two are kept in sync by hand — edit one, mirror the other. Both point at
 the same files (`memory/`, `playbooks/`, `skills/`, `review/`). Kept short on purpose: a

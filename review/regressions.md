@@ -1,4 +1,3 @@
-
 # Review regression set
 
 Real defects the rubric **missed** on first review, kept so a change to the rubric can be
@@ -39,7 +38,7 @@ partial ones - correct this if wrong).
 | R-03 | B6 | Naming of the new type/API | missed | same | category 20 | | |
 | R-04 | B7 | Profile router flag has no effect | missed | no "who reads this?" check | "Value has a consumer" | | |
 | R-05 | B11 | Same flag, second site | missed | same | "Value has a consumer" + sibling check | | |
-| R-06 | B1 | Ownership of the loaded record inferred from `employeeId == nil` | partial | sibling check on one instance | IOS-036, category 20 | | |
+| R-06 | B1 | Ownership of the loaded record inferred from `ownerId == nil` | partial | sibling check on one instance | IOS-036, category 20 | | |
 | R-07 | B12 | Same inference on the deep-link path | partial | same | IOS-036 | | |
 | R-08 | B8 | No test for the "someone else's record" case | missed | IOS-016 existed, not applied to the risky case | IOS-016 + IOS-036 test requirement | | |
 | R-09 | B9 | Initializer starts async work before inputs are set | missed | no playbook entry | IOS-037 | | |
@@ -47,7 +46,7 @@ partial ones - correct this if wrong).
 | R-11 | A5 | `isNotBlank` convention: `isEmpty` judged "not a violation" | missed | existing rule misapplied | project-convention check in constitution / gate | | |
 | R-12 | A1 | Date-format coverage assumed, not checked | missed | verify-before-asserting didn't fire | evidence tags: runtime claim needs `probed`/`ran` | | |
 | R-14 | B4 | `debugPrint` is invisible in release; use the project's logging helper (same comment as R-10, second reviewer) | missed | hygiene unchecked | Cleanup notes hygiene bullet | | |
-| R-15 | B12 | Deep link dropped `showApprovalActions` and the link's status that the legacy screen got: approver case lost | missed | privilege-parity check didn't cover argument parity | IOS-035 (extend to arguments, not just checks) | | |
+| R-15 | B12 | Deep link dropped `showPrivilegedActions` and the link's status that the legacy screen got: approver case lost | missed | privilege-parity check didn't cover argument parity | IOS-035 (extend to arguments, not just checks) | | |
 | R-16 | 15 Oct R1-2 | Test asserted malformed HTML copied from code output | missed | no test-oracle check | IOS-038 | | |
 | R-17 | 15 Oct R1-3 | Deep link built a display model without an argument every feed route passes | missed | cross-call-site compared privileges, not arguments | IOS-039 | | |
 | R-18 | 15 Oct R1-4 | Input built before its mode was resolved; stale list | missed | no capture-vs-mutation check | IOS-040 | | |

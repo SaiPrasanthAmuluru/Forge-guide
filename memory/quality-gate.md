@@ -46,7 +46,7 @@ finding's severity for the gate.
 
 ## Check depth mode
 
-Set by the person with the `Mode:` line at the top of `CLAUDE.md` (or stated in the
+Set by the person with the `Mode:` line at the top of `AGENTS.md` (or stated in the
 task). Default **strict**. A mode changes only how much is searched and re-checked - never
 the severity definitions, the gate table, or the verdict arithmetic. Every narrowing a mode
 causes is disclosed in the output in one line (e.g. "fast mode: independent re-review not

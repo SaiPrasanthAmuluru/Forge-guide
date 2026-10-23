@@ -4,11 +4,10 @@ Mode: strict
 
 <!-- strict | standard | fast — see `memory/quality-gate.md` "Check depth mode". -->
 
-Cross-tool entry point (the open `AGENTS.md` convention) for any
-agent. Tools that look for `CLAUDE.md` instead get the same content from that file, so the
-two are kept in sync by hand — edit one, mirror the other. Both point at
-the same files (`memory/`, `playbooks/`, `skills/`, `review/`). Kept short on purpose: a
-bloated instruction file hurts performance and inflates cost.
+Single entry point for any agent (the open `AGENTS.md` convention). `CLAUDE.md` only imports
+this file for tools that look for that name, so there is one copy to maintain. Kept short on
+purpose: a bloated instruction file hurts performance and inflates cost; detail lives in the
+linked files (`memory/`, `playbooks/`, `skills/`, `review/`), loaded only when needed.
 
 ## Load order (the token budget)
 
@@ -60,16 +59,18 @@ one section of `memory/quality-gate-detail.md` when applying a check in depth;
 
 1. Check the diff against every acceptance criterion in `spec.md`, explicitly.
 2. Run the applicable `memory/quality-gate.md` checks, scoped to new/changed code (ratchet).
-3. Before raising a PR, run the independent pass (a fresh-context reviewer or a human, not
-   the context that wrote the change) at the depth the Mode sets, and tick it in
-   `verification.md`. A same-context review is an "author pass, not independent" and can't
-   approve.
-3b. Keep the developer in control (`memory/constitution.md`: Developer control, Fit the code as
+3. Re-run `scripts/impact.sh <base>` and `scripts/reuse-scan.sh <base>` on your own diff and put
+   anything new into the spec.
+4. Offer the independent pass (a fresh-context reviewer or a human, not the context that wrote
+   the change) at the depth the Mode sets, and record it in `verification.md`
+   (`scripts/verify-spec.sh` fails until it is). A same-context review is an "author pass, not
+   independent" and can't approve. Whether to open a PR is the developer's call: never create
+   one yourself; say the change is ready for review and stop.
+5. Keep the developer in control (`memory/constitution.md`: Developer control, Fit the code as
    it is today): change only what the spec names, match the existing code, never commit or
    push unasked, and finish with a short handoff - files changed, what was left untouched,
    what was read vs not verified, how to check it, and at most one "Beyond this change" note.
-4. Update `session-state.md` briefly; append one row to `logs/token-ledger.md` now (task,
-   Mode, approximate tokens used, clarification rounds, full-file regens, playbook IDs).
+6. Update `session-state.md` briefly and log the task now (see Working agreement).
 
 ## Token economy
 
@@ -101,8 +102,8 @@ Rules unverified for a long stretch get re-verified. Every rule costs tokens eac
 loads, so rules and playbook entries that go unused or get overridden repeatedly are
 candidates for removal. New recurring bug shapes get a Seen/Action entry in the relevant
 `playbooks/<stack>.md` (`playbooks/_template.md`) — only after they actually happen. While
-dogfooding, log one entry in `logs/test-runs.md` per real task.
-
+dogfooding, log one entry in `logs/test-runs.md` per real task. Savings or recall claims are
+measured with `evals/README.md`, not estimated.
 
 **Where state lives.** When the toolkit is the project, `specs/`, `logs/` and `session-state.md`
 sit beside this file; when it is kept outside the project, they live in the project under

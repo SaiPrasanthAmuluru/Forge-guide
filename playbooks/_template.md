@@ -72,7 +72,7 @@ several configurations tested. This project's own real usage has shown the oppos
 specific cases - playbook entries here have caught real bugs other passes missed - so
 this isn't a reason to stop building the playbook. It is a reason to keep entries compact,
 keep loading them selectively rather than dumping the whole file in every time (see
-`CLAUDE.md`/`AGENTS.md`'s reading-efficiency section), and to actually use the pruning
+`AGENTS.md`'s reading-efficiency section), and to actually use the pruning
 discipline already built into this project - retire entries that stop earning their
 keep, don't let the file grow indefinitely on the assumption that more guidance is always
 better. Measure this the same way everything else here gets measured: does a specific

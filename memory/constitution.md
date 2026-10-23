@@ -59,7 +59,7 @@ Tiers:
 - Favor targeted edits over full-file regeneration.
 - Use the repo's own helper family (e.g. `isNil`/`isNotNil`/`isNotBlank`) wherever it has
   one. Before writing a nil/empty check, grep the helper file for the family, not only the
-  helper named in CLAUDE.md. Seen twice in real review.
+  helper named in AGENTS.md. Seen twice in real review.
 
 ## Token economy [DEFAULT] — last-verified: <date>
 

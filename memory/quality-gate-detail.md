@@ -1,10 +1,9 @@
-
 # Quality gate - detail and evidence
 
 Rationale, real incidents and full wording behind the rules in `memory/quality-gate.md`.
 **Do not read this file at the start of a task.** The core file is the operating rulebook;
 come here only when applying one specific check in depth, or when deciding whether a rule
-still earns its place (see CLAUDE.md "Rule maintenance"). Severity scale, confidence, gate
+still earns its place (see AGENTS.md "Maintenance"). Severity scale, confidence, gate
 table and check-depth modes live only in the core file - not duplicated here, so they
 cannot drift.
 

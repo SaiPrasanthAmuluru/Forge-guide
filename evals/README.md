@@ -48,8 +48,7 @@ reports weight cache reads at 0.1, cache writes at 2 and output at 5).
 - Compare arms on the same task only. A review of a 20-file diff and one of a 2-file diff
   do not share a baseline.
 - A saving that costs recall is not a saving. Report both together.
-- A rule that changes no result over about ten runs is a pruning candidate (CLAUDE.md, Rule
-  maintenance). A miss the toolkit makes becomes a new case in `review/regressions.md`.
+- A rule that changes no result over about ten runs is a pruning candidate (AGENTS.md, Maintenance). A miss the toolkit makes becomes a new case in `review/regressions.md`.
 - Write down what you could not measure. Vendor review benchmarks are small and self-run;
   these runs are also small, so say how many.
 

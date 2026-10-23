@@ -32,7 +32,7 @@ use a copy or symlink of that one file in the project root.
    > Use `<path>/Forge-guide/review/review-prompt.md` as the rubric. Base `<sha>`, head
    > `<sha>`. Mode: standard. PR description: ...
 3. You get graded findings (CRITICAL to NIT), a mechanical verdict and a list of checks run.
-   Post it on the PR yourself, or automate that with a CI job (see "Reviewing a PR").
+   Post it on the PR yourself, or automate that with your own CI job.
 
 **To generate code**
 
@@ -48,7 +48,7 @@ much is searched and re-checked, never the severities or the verdict.
 **Where your project's state goes:** `<project>/.forge/` (specs, logs, session state).
 Add `.forge/` to `.git/info/exclude` if you do not want it committed.
 
-Optional adapters: a Claude Code reviewer subagent and a PR-gate hook are included under
+Optional adapters: a Claude Code reviewer subagent and an optional no-agent-PRs hook are included under
 `.claude/` and `scripts/pr-gate.sh`. Everything works without them.
 
 ## Principles for the developer's trust
@@ -102,7 +102,7 @@ handling **rule staleness** as a codebase evolves. It does this without heavy ce
     never drift apart. Multi-stack from the start via `playbooks/_template.md` — but a new
     stack playbook starts empty and grows only from real incidents, never invented ones.
 13. **Agent- and language-agnostic** — `AGENTS.md` (the open convention read by many agent
-    tools) is the entry point; `CLAUDE.md` carries the same content for tools that look for
+    tools) is the single entry point; `CLAUDE.md` just imports it for tools that look for
     that name. Rules, playbooks and scripts are plain files with no tool-specific
     dependency; stack lessons are per-language playbooks. Both entry files stay short on purpose — evidence shows bloated or
     LLM-expanded instruction files hurt agent performance and inflate cost rather than
@@ -130,7 +130,7 @@ handling **rule staleness** as a codebase evolves. It does this without heavy ce
 
 Rules loaded before any work starts, estimated at ~4 bytes per token:
 
-| | Before | After |
+| | Before (estimate) | After (estimate) |
 |---|---|---|
 | Generation task (entry file + constitution + gate + 1 skill + playbook + context-scan) | ~17.7K | ~12.5K with the playbook index, 3 matching entries, `flow-brief.md` (~1.5K) and the codebase map (~2.5K when built) - about -29%; the map is the deliberate cost of not generating blind |
 | Review (entry file + constitution + gate + review prompt + playbook) | ~18.4K | ~9.5K with the index and 3 matching entries (about -48%) |
@@ -145,8 +145,8 @@ recall on known issues, false positives).
 
 ```
 Forge-guide/
-├── CLAUDE.md                 # same entry point, for tools that read this file name
-├── AGENTS.md                 # entry point for any agent — kept in sync with CLAUDE.md by hand
+├── AGENTS.md                 # the single entry point for any agent
+├── CLAUDE.md                 # imports AGENTS.md + a few Claude Code notes
 ├── memory/
 │   ├── constitution.md       # tiered, dated, non-negotiable-vs-suggested rules
 │   ├── quality-gate.md       # CORE rulebook (~2K tokens): severity, gate, modes, mandatory checks
@@ -158,7 +158,7 @@ Forge-guide/
 │   ├── context-scan.md       # already-exists / already-fixed checks + snapshot caching logic
 │   ├── base-snapshot.md      # the codebase map: read in full first, every generation task (project-specific)
 │   ├── flow-brief.md         # generation: map the existing flow, one batched question round, stop-and-ask triggers
-│   ├── risk-paths.txt        # regexes marking a changed file HIGH risk (edit for your codebase)
+│   └── risk-paths.txt        # regexes marking a changed file HIGH risk (edit for your codebase)
 ├── review/
 │   ├── review-prompt.md      # single-pass review harness, references quality-gate + playbooks
 │   └── regressions.md        # past review misses as replayable cases; replayed only when the rubric changes
@@ -187,7 +187,7 @@ Forge-guide/
 │   ├── impact.sh             # consumers of every declaration you change/remove, flagged when in untouched files
 │   ├── reuse-scan.sh         # existing extensions/helpers: find before writing, flag re-implementation after
 │   ├── probes/swift.sh       # optional stack extras; add probes/<stack>.sh for others
-│   ├── pr-gate.sh            # PreToolUse hook: blocks `pr create` while the independent pass is unticked
+│   ├── pr-gate.sh            # optional hook: stops the agent opening PRs itself (the developer decides)
 │   ├── ledger-append.sh      # one-command token-ledger row (per task)
 │   ├── phase-log.sh          # tokens, files read and cause per phase (map/flow/scans/generate/review/rework)
 │   ├── finding-log.sh        # one row per finding: who found it, status, which check should have
@@ -199,7 +199,7 @@ Forge-guide/
 │   ├── check-context-freshness.sh  # cheap staleness check for base-snapshot.md
 │   └── refresh-context.sh          # shows what changed since the last snapshot
 └── .claude/
-    ├── settings.json         # optional Claude Code adapter: PreToolUse hook running pr-gate.sh
+    ├── settings.json         # optional Claude Code adapter: PreToolUse hook running pr-gate.sh (agents may not open PRs)
     └── agents/forge-reviewer.md  # optional Claude Code adapter: read-only reviewer subagent
 ```
 
@@ -237,7 +237,7 @@ assumptions about the flow itself. `context/flow-brief.md` makes them map entry 
 current flow with `file:line`, ownership and boundaries first, sort unknowns into
 answerable-from-code / needs-a-human / safe-to-assume, and ask once. The spec template has
 matching "Flow & understanding" and "Assumptions" sections. The independent pass before a PR
-is enforced by a `verification.md` checkbox that `verify-spec.sh` checks. Review misses are
+is recorded in a `verification.md` checkbox that `verify-spec.sh` checks. Review misses are
 kept as cases in `review/regressions.md` (R-10, a request id in a log, has no check yet).
 
 ## Impact and reuse scans (the two context-building checks)
@@ -268,15 +268,17 @@ project's git.
 - **State stays in the project:** `.forge/specs/`, `.forge/logs/`, `.forge/session-state.md`.
   `scripts/ledger-append.sh` creates `.forge/logs/token-ledger.md` on first use. Add `.forge/`
   to the project's `.git/info/exclude` if you do not want it committed.
-- **The PR gate is optional and tool-specific.** `scripts/pr-gate.sh` reads a tool-call JSON
-  on stdin and blocks `gh pr create` / `az repos pr create` while the newest spec's
-  Independent pass is unticked. Hook-capable agents can run it before shell commands; in
-  Claude Code, add it to `~/.claude/settings.json` (use your real path) and check `/hooks`:
+- **Pull requests are your decision.** The rules already say an agent never commits, pushes or
+  opens a PR unless you ask. `scripts/pr-gate.sh` is an optional hook that enforces it: it
+  blocks `gh pr create` / `az repos pr create` when an agent runs them. Say yes for a session
+  with `FORGE_ALLOW_PR=on`, or run the command yourself. In Claude Code, add it to
+  `~/.claude/settings.json` (use your real path) and check `/hooks`:
   ```json
   { "hooks": { "PreToolUse": [ { "matcher": "Bash", "hooks": [
     { "type": "command", "command": "/path/to/Forge-guide/scripts/pr-gate.sh" } ] } ] } }
   ```
-  With no hook, tick the Independent pass line yourself; `verify-spec.sh` still checks it.
+  The independent-pass line in `verification.md` is your record that a fresh review happened;
+  `verify-spec.sh` still checks it, but nothing forces a PR.
 - **A reviewer in its own context** is what makes the pass independent. Any agent can do this
   as a fresh session pointed at `review/review-prompt.md`. For Claude Code,
   `.claude/agents/forge-reviewer.md` packages it as a read-only subagent; copy it to

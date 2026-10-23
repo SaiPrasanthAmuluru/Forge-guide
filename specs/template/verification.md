@@ -1,4 +1,3 @@
-
 # Verification: <feature name>
 
 Run after implementation, before marking the spec done. Go through every acceptance
@@ -7,7 +6,7 @@ criterion from `spec.md` explicitly — "it compiles" and "it runs" are not veri
 - [ ] Criterion 1 — <how it was checked: test / manual trace / repro> — PASS/FAIL
 - [ ] Criterion 2 — <how it was checked> — PASS/FAIL
 
-## Independent pass (required before raising a PR - see memory/quality-gate.md)
+## Independent pass (recommended before the developer raises a PR - see memory/quality-gate.md)
 
 - [ ] Run by `forge-reviewer` or a human, not the context that wrote the change - verdict:
   <...> - or reason it was not run (e.g. `fast` Mode, low-risk): <...>

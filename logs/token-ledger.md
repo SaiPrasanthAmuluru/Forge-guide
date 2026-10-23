@@ -1,7 +1,7 @@
 # Token ledger
 
 Append-only. Rough numbers are fine — the point is the trend, not precision. Roll old
-entries into a monthly summary once this gets long (CLAUDE.md, Rule maintenance).
+entries into a monthly summary once this gets long (AGENTS.md, Maintenance).
 
 **How to fill "Tokens":** note the session token count (your tool's usage readout, e.g. `/cost` in Claude Code)
 before the task and after it; the difference is the task's cost. If you only have one

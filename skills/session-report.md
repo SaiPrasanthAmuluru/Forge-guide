@@ -219,7 +219,7 @@ below; a session with no spec is not exempt from that.
   pull conclusions already reached during the session.
 - **Backfill the logs, don't just summarize around them.** If `logs/token-ledger.md`,
   `logs/test-runs.md`, or `session-state.md` are still blank/template for work this report
-  covers - meaning the per-task logging instructions in `CLAUDE.md`/`AGENTS.md` weren't
+  covers - meaning the per-task logging instructions in `AGENTS.md` weren't
   followed live - write real entries into those files now (`ledger-append.sh`, `phase-log.sh`, `finding-log.sh`) from what's known this session,
   don't just let the report itself be the only record. Rough estimates are explicitly fine
   per the ledger's own rule; an approximate real entry beats a perfectly-accurate one that

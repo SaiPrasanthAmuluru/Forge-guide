@@ -10,8 +10,10 @@
 #   * what falls outside an optional --budget, so partial coverage is disclosed, not hidden
 #
 # Usage: scripts/diff-scope.sh <base> [head] [--budget <changed-lines>]
+#        scripts/diff-scope.sh --local [--budget N]   # uncommitted work: staged + unstaged + new files, vs HEAD
 #   base/head   any git revisions; the diff is base...head (what the PR would merge)
 #   head        defaults to HEAD
+#   --local     review changes not committed yet (nothing is staged, committed or modified)
 #   --budget N  stop listing files under READ once N changed lines are covered; HIGH-risk
 #               files are always kept. The rest are listed under NOT REACHED.
 #
@@ -23,18 +25,34 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RISK_FILE="$REPO_ROOT/context/risk-paths.txt"
 
-base=""; head="HEAD"; budget=0
+base=""; head="HEAD"; budget=0; local_mode=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --budget) budget="${2:-0}"; shift 2 ;;
+    --local) local_mode=1; shift ;;
     -h|--help) sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) if [ -z "$base" ]; then base="$1"; elif [ "$head" = "HEAD" ]; then head="$1"; fi; shift ;;
   esac
 done
-[ -n "$base" ] || { echo "usage: scripts/diff-scope.sh <base> [head] [--budget N]" >&2; exit 2; }
+[ "$local_mode" = 1 ] && { base="HEAD"; head="working tree"; }
+[ -n "$base" ] || { echo "usage: scripts/diff-scope.sh <base> [head] [--budget N] | --local [--budget N]" >&2; exit 2; }
 
 # -M: follow renames (a rename with no edits is not a change worth reading).
-numstat="$(git diff --numstat -M "$base...$head")" || exit 1
+if [ "$local_mode" = 1 ]; then
+  # Uncommitted work = tracked changes vs HEAD (staged and unstaged) plus untracked, non-ignored files.
+  numstat="$(git diff --numstat -M HEAD)" || exit 1
+  while IFS= read -r uf; do
+    [ -n "$uf" ] || continue
+    if grep -Iq . "$uf" 2>/dev/null; then ul="$(wc -l < "$uf" | tr -d ' ')"; numstat="${numstat:+$numstat
+}${ul}	0	${uf}"
+    else numstat="${numstat:+$numstat
+}-	-	${uf}"; fi
+  done <<EOF_UNTRACKED
+$(git ls-files --others --exclude-standard)
+EOF_UNTRACKED
+else
+  numstat="$(git diff --numstat -M "$base...$head")" || exit 1
+fi
 [ -n "$numstat" ] || { echo "no changes between $base and $head"; exit 0; }
 
 printf '%s\n' "$numstat" | awk -F'\t' -v risk_file="$RISK_FILE" -v budget="$budget" -v base="$base" -v head="$head" '
@@ -126,4 +144,3 @@ printf '%s\n' "$numstat" | awk -F'\t' -v risk_file="$RISK_FILE" -v budget="$budg
     printf "READ total: %d changed lines (~%d tokens, rough guess).\n", covered, covered * 14
   }
 '
-

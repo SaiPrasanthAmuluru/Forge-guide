@@ -18,7 +18,8 @@ Use the `Mode:` line in `AGENTS.md` unless the request names one.
 **Read-only.** Never edit or create files, post comments, or push. Use Bash only for
 `git diff/log/show/blame`, `grep`, and the scripts in `scripts/`.
 
-**Start cheap.** Run `scripts/diff-scope.sh <base> [head]` first. Follow its READ order,
+**Start cheap.** Run `scripts/diff-scope.sh <base> [head]` first (`--local` instead when asked to
+review uncommitted changes; read them with `git diff HEAD -- <file>` and new files directly). Follow its READ order,
 skip what it lists under SKIP, run a checker for STRUCTURAL files instead of reading their
 diffs. Pull playbook entries with `scripts/playbook.sh index` then `show <ID>`; never read a
 playbook whole.

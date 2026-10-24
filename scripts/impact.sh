@@ -42,12 +42,18 @@ else
   MODE="diff $BASE..${HEAD:-working tree}"
   # shellcheck disable=SC2086
   git diff --name-only $RANGE 2>/dev/null | grep -Ev "$VENDOR" > "$TD/changedfiles"
+  # Working-tree mode: new files that are not tracked yet count as changes too.
+  if [ -z "$SRC" ]; then git ls-files --others --exclude-standard 2>/dev/null | grep -Ev "$VENDOR" >> "$TD/untracked"; sort -u "$TD/untracked" >> "$TD/changedfiles" 2>/dev/null; fi
   [ -s "$TD/changedfiles" ] || { echo "== impact: $MODE =="; echo "No changed files in that range."; exit 0; }
 
   DECL_RE='(^|[^A-Za-z0-9_])(func|var|let|class|struct|enum|protocol|actor|typealias|def|fn|function|interface|trait|val|fun)[[:space:]]+[A-Za-z_][A-Za-z0-9_]*'
   while IFS= read -r f; do
     # shellcheck disable=SC2086
-    git diff -U0 $RANGE -- "$f" > "$TD/d" 2>/dev/null
+    if [ -z "$SRC" ] && [ -s "$TD/untracked" ] && grep -qxF -- "$f" "$TD/untracked"; then
+      git diff --no-index -U0 /dev/null "$f" > "$TD/d" 2>/dev/null || true
+    else
+      git diff -U0 $RANGE -- "$f" > "$TD/d" 2>/dev/null
+    fi
     # removed declarations: their consumers will break
     grep -E '^-[^-]' "$TD/d" | grep -Eo "$DECL_RE" | sed -E 's/.*(func|var|let|class|struct|enum|protocol|actor|typealias|def|fn|function|interface|trait|val|fun)[[:space:]]+//' \
       | while IFS= read -r n; do printf '%s\tremoved\n' "$n"; done >> "$TD/syms"
@@ -165,4 +171,3 @@ if [ -s "$TD/areas_all" ]; then
 fi
 [ -s "$TD/skipped" ] && echo "skipped (too short or generic to text-search): $(cat "$TD/skipped")"
 echo "next: for each area above, say in the spec's Impact section what that flow does with the new behavior, or why it is unaffected. Enum cases, selector/notification strings and generated code need their own search (xref.sh --also)."
-

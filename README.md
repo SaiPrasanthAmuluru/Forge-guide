@@ -34,6 +34,15 @@ use a copy or symlink of that one file in the project root.
 3. You get graded findings (CRITICAL to NIT), a mechanical verdict and a list of checks run.
    Post it on the PR yourself, or automate that with your own CI job.
 
+**To review your own changes before committing** (nothing needs to be committed or pushed)
+
+1. In your project: `<path>/Forge-guide/scripts/local-changes.sh` lists what is there (staged,
+   unstaged and new files, plus any unpushed commits) and the commands to use.
+2. Open a fresh agent session and say:
+   > Use `<path>/Forge-guide/review/review-prompt.md` to review my uncommitted local changes.
+   > Mode: standard.
+3. It reads the working tree against `HEAD` and changes nothing: no staging, commits or stashes.
+
 **To generate code**
 
 1. In your project, say:
@@ -182,6 +191,7 @@ Forge-guide/
 │   └── suppressions.md       # audit trail for waived MEDIUM findings
 ├── scripts/
 │   ├── pr-range.sh           # PR number or branch -> exact base/head commits, no checkout
+│   ├── local-changes.sh      # what is uncommitted/unpushed in this checkout, and the commands to review it
 │   ├── map-probe.sh          # stack-neutral fact sheet (shape, scope, tests, gates) used to build the map
 │   ├── xref.sh               # dependency-free call-site finder for the cross-call-site check
 │   ├── impact.sh             # consumers of every declaration you change/remove, flagged when in untouched files
@@ -284,6 +294,16 @@ project's git.
   as a fresh session pointed at `review/review-prompt.md`. For Claude Code,
   `.claude/agents/forge-reviewer.md` packages it as a read-only subagent; copy it to
   `~/.claude/agents/` to use it in every project.
+
+## Reviewing local changes (before you commit)
+
+`scripts/local-changes.sh` shows the uncommitted state and the exact commands. `scripts/diff-scope.sh
+--local` triages staged, unstaged and new files against `HEAD`; `scripts/impact.sh HEAD` and
+`scripts/reuse-scan.sh HEAD` do the impact and reuse scans on the same set, including files git does
+not track yet. The reviewer reads diffs with `git diff HEAD -- <file>` and new files directly, never
+stages or edits anything, and labels the result `Reviewed: local changes on <branch> @ <sha>
+(uncommitted)`. Commits not pushed yet are reviewed with `diff-scope.sh <upstream> HEAD`. The
+rubric, gate and verdict are identical to a PR review.
 
 ## Reviewing a PR (Azure DevOps, GitHub or plain branches)
 

@@ -85,7 +85,9 @@ flagged bug, and ask for paths and conclusions back.
 
 ## Reviewing a diff
 
-Use `review/review-prompt.md`: one pass with a token-aware flow (`scripts/diff-scope.sh`
+Use `review/review-prompt.md` for a PR, a commit range, unpushed commits or uncommitted local
+changes (`scripts/local-changes.sh` shows what exists; `diff-scope.sh --local` triages it; nothing
+is staged or changed): one pass with a token-aware flow (`scripts/diff-scope.sh`
 triage → diff-only candidate pass → targeted confirmation), same gate and playbooks as
 generation. Re-reviews of an updated PR are incremental (commits since the last reviewed
 head, plus re-confirming open findings). Where subagents exist, run the review in a

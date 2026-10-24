@@ -5,11 +5,26 @@ diff. Skeptical of "looks fine." Reviewing with a second goal beyond gatekeeping
 change: raising the team's overall standard - every finding's "Why it matters" should teach
 something reusable, not just "fix this line."
 
-One comprehensive pass, not a roster of separate agents - this mirrors two independent
-production systems (this project's own iOS rubric and a colleague's PR-review skill) that
-converged on the same architecture. A single pass with a structured, forced checklist
+One comprehensive pass, not a roster of separate agents. A single pass with a structured, forced checklist
 avoids the token cost of re-reading the diff once per specialized agent, while the
 checklist itself is what prevents categories getting skipped under time pressure.
+
+## What can be reviewed
+
+Three targets, same rubric, same gate, same verdict arithmetic:
+
+1. **A pull request or commit range** - base and head from `scripts/pr-range.sh`.
+2. **Commits not pushed yet** - `scripts/diff-scope.sh <upstream> HEAD`.
+3. **Local changes not committed yet** (staged, unstaged and new files) - the developer's work
+   in progress. Run `scripts/local-changes.sh` to see what is there, then
+   `scripts/diff-scope.sh --local`, `scripts/impact.sh HEAD` and `scripts/reuse-scan.sh HEAD`
+   (they include untracked files and change nothing). Read a changed file's diff with
+   `git diff HEAD -- <file>` and a new file directly. The header is
+   `Reviewed: local changes on <branch> @ <short sha> (uncommitted) | Pass: ... | Mode: ... |
+   Coverage: ...`. There is no earlier head, so skip the incremental rules below. Do not stage,
+   commit, stash or edit anything; the code stays exactly as the developer left it. A review of
+   work in progress is a check before committing, not a PR approval: the verdict still
+   follows the gate, and a fresh session is still what makes the pass independent.
 
 Nothing is pre-built or handed to the reviewer - it discovers the diff, the pre-diff
 baseline, and any supporting context itself, using the exact commands its harness provides
@@ -24,7 +39,8 @@ and repo-wide search to reason about duplication, architecture boundaries, and c
 Review cost is mostly reading, so read in this order and stop as soon as a step can be
 answered. This changes *when* context gets read, not which checks run.
 
-0. **Triage - cheap, no deep reads.** Run `scripts/diff-scope.sh <base> [head]` (it reads
+0. **Triage - cheap, no deep reads.** Run `scripts/diff-scope.sh <base> [head]` (`--local` for
+   uncommitted work; it reads
    only `git diff --numstat`, never file contents) and use the PR description. Skip, and say
    why, if the PR is closed, a draft, trivially correct (rename, comment-only, generated
    file, lockfile-only), or already carries a review from this rubric on the same head
@@ -34,7 +50,7 @@ answered. This changes *when* context gets read, not which checks run.
    oversized diff so what isn't reached is named in the summary rather than silently
    dropped.
    - **Impact and reuse scans (cheap, local).** Run `scripts/impact.sh <base> <head>` and
-     `scripts/reuse-scan.sh <base> <head>` (output is paths, counts and a few snippets). Treat
+     `scripts/reuse-scan.sh <base> <head>` (`HEAD` as the only argument for uncommitted work) (output is paths, counts and a few snippets). Treat
      "consumers in untouched files" and "REMOVED but still referenced" as candidates for
      step 2's cross-call-site confirmation, and each "repeats helper body", "raw nil
      comparison where a helper exists" or "name close to an existing helper" as an

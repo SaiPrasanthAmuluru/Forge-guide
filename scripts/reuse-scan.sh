@@ -115,6 +115,12 @@ BASE="$1"; HEAD="${2:-}"
 if [ -n "$HEAD" ]; then RANGE="$BASE $HEAD"; else RANGE="$BASE"; fi
 # shellcheck disable=SC2086
 git diff -U0 $RANGE -- '*.swift' 2>/dev/null > "$TD/diff"
+# Working-tree mode: untracked Swift files are new code too.
+if [ -z "$HEAD" ]; then
+  git ls-files --others --exclude-standard -- '*.swift' 2>/dev/null | while IFS= read -r uf; do
+    git diff --no-index -U0 /dev/null "$uf" 2>/dev/null >> "$TD/diff" || true
+  done
+fi
 echo "== reuse-scan: diff $BASE..${HEAD:-working tree} (index: $NROWS helpers @ $(head -n1 "$IDX" | cut -d' ' -f3)) =="
 if ! grep -q '^+++ b/' "$TD/diff"; then echo "No Swift changes in that range; nothing to scan (this scan is Swift-only)."; exit 0; fi
 
@@ -184,4 +190,3 @@ while IFS="$TAB" read -r kind helper hloc wloc text extra; do
   esac
 done < "$TD/m2"
 echo "next: for each candidate, either switch to the helper or say why not in the spec's Reuse scan line / the review's Checks run."
-

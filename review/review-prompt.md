@@ -233,7 +233,7 @@ formatting unless it's a functional issue.
 Work through these; a stack-specific playbook (`playbooks/<stack>.md`) supplies concrete
 known-better-patterns for domains like persistence, concurrency, and platform APIs -
 reference it rather than reinventing stack-specific checks here. Never read a playbook
-whole: run `scripts/playbook.sh index` once, then `scripts/playbook.sh show <ID>` for the
+whole: run `scripts/playbook.sh index <stack>` once (the project's language; skip if no stack playbook matches), then `scripts/playbook.sh show <ID>` for the
 entries matching what the diff touches.
 
 1. **Correctness & logic** - off-by-one, inverted conditionals, incorrect optional handling,

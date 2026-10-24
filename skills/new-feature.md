@@ -1,4 +1,3 @@
-
 # Skill: new-feature
 
 Use when the task is adding new functionality that doesn't exist yet in the codebase.
@@ -89,7 +88,7 @@ tasks that are secretly too large and should be split further.
 
 ## While implementing
 
-Pull the relevant playbook entries (`scripts/playbook.sh index`, then `show <ID>` - never
+Pull the relevant playbook entries (`scripts/playbook.sh index <stack>`, then `show <ID>` - never
 the whole file) for known-better-patterns before writing code in
 a domain it covers (persistence, concurrency, platform APIs) - don't reintroduce a pattern
 that's already a documented incident. After fixing any bug-shaped issue mid-implementation,

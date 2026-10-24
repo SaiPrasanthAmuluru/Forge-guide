@@ -21,7 +21,7 @@ Use the `Mode:` line in `AGENTS.md` unless the request names one.
 **Start cheap.** Run `scripts/diff-scope.sh <base> [head]` first (`--local` instead when asked to
 review uncommitted changes; read them with `git diff HEAD -- <file>` and new files directly). Follow its READ order,
 skip what it lists under SKIP, run a checker for STRUCTURAL files instead of reading their
-diffs. Pull playbook entries with `scripts/playbook.sh index` then `show <ID>`; never read a
+diffs. Pull playbook entries with `scripts/playbook.sh index <stack>` (the project's language; skip if none) then `show <ID>`; never read a
 playbook whole.
 
 **Return only this, and nothing else:**

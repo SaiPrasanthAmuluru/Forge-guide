@@ -152,7 +152,7 @@ ambiguity so the next pass is cheaper.
 
 - `memory/constitution.md` - project-wide HARD/DEFAULT/SUGGESTED rules.
 - `playbooks/<stack>.md` - stack-specific incidents, each with an ID and severity. Never
-  read a playbook whole: `scripts/playbook.sh index`, then `scripts/playbook.sh show <ID>`
+  read a playbook whole: `scripts/playbook.sh index <stack>`, then `scripts/playbook.sh show <ID>`
   for the few entries that match the code being touched.
 - Skills and the review prompt reference these sources rather than hardcoding severities,
   so one edit here is picked up everywhere.

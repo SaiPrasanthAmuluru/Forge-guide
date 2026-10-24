@@ -44,7 +44,7 @@ to confirm, per `context/flow-brief.md` section 3, and apply its stop-and-ask ru
 
 ## While refactoring
 
-Pull the playbook entries for the domain being touched (`scripts/playbook.sh index`, then
+Pull the playbook entries for the domain being touched (`scripts/playbook.sh index <stack>`, then
 `show <ID>`) - a refactor is exactly the
 moment a known-better-pattern either gets adopted or gets reintroduced as a regression.
 If the refactor's own fix duplicates a helper across two methods or files it touches,

@@ -20,6 +20,11 @@ real tasks and the token counter you already have.
 - **A - plain:** the same agent with no toolkit and no project rules file. Same model, same task.
 - **B - lean:** the toolkit with `Mode: standard`.
 - **C - strict:** the toolkit with `Mode: strict` (the default).
+- **D - minimal review prompt:** a short, language-neutral prompt only ("report only definite bugs
+  and clear violations of the project's own rules, in the changed lines; confirm each before
+  reporting; skip pre-existing issues, lint-catchable issues and style"), no playbooks, no
+  checklist. This is the baseline to beat on precision and tokens; if it matches the toolkit on
+  recall at lower cost, the toolkit's extra rules are not earning their tokens.
 
 Each run is a fresh session started from the same commit, and the model and toolkit version
 are written down. Run each arm at least three times; one run tells you nothing about

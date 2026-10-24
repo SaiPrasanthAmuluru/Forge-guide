@@ -19,7 +19,9 @@ Always, once per session: this file, `memory/constitution.md`, `memory/quality-g
 
 Only when the task needs it: one skill file for the task type; `context/flow-brief.md` for
 generation tasks (flow map, questions, stop-and-ask); playbook entries via
-`scripts/playbook.sh index` then `scripts/playbook.sh show <ID>` (never the whole file);
+`scripts/playbook.sh stacks`, then `index <stack>` for the project's language, then `show <ID>`
+(never the whole file; if no playbook matches the project's language, skip playbooks rather than
+reading another stack's);
 one section of `memory/quality-gate-detail.md` when applying a check in depth;
 `review/review-prompt.md` for reviews; `skills/build-context.md` to build the codebase map;
 `skills/session-report.md` for reports.

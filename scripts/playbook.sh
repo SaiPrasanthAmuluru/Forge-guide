@@ -6,6 +6,7 @@
 # truth (no separate index file to drift out of sync) - this script only slices it.
 #
 # Usage:
+#   scripts/playbook.sh stacks               # which stack playbooks exist, with entry counts
 #   scripts/playbook.sh index [stack]        # one line per entry: ID, title, severity
 #   scripts/playbook.sh show  <ID>... [-s stack]   # full Seen/Action text of those entries
 #   scripts/playbook.sh find  <keyword> [stack]    # entries whose text mentions keyword
@@ -54,6 +55,12 @@ cmd="${1:-}"
 shift
 
 case "$cmd" in
+  stacks)
+    while IFS= read -r f; do
+      printf '%s\t%s entries\n' "$(basename "$f" .md)" "$(grep -c '^### ' "$f" | tr -d ' ')"
+    done < <(playbook_files "")
+    ;;
+
   index)
     stack="${1:-}"
     require_stack "$stack"
@@ -118,4 +125,3 @@ case "$cmd" in
 
   *) usage ;;
 esac
-

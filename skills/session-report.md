@@ -131,7 +131,7 @@ If a table is empty, say the ledger was not filled for that and backfill per the
 
 ## Playbook activity
 
-- Entries referenced by ID this session (e.g. IOS-001, IOS-012): <list>
+- Entries referenced by ID this session (e.g. <STACK>-001, <STACK>-012): <list>
 - New entries proposed but not yet added (a real incident found this session that isn't
   in a playbook yet): <list with a drafted Seen/Action for each>
 

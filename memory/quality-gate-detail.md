@@ -31,10 +31,9 @@ related vs. unrelated).
 
 A validator passing is not proof the intended change took effect - it only proves the file
 is still well-formed. Real incident: a bulk edit intended to delete several lines was
-reported as clean because `plutil -lint` passed on the project file afterward; `plutil`
-only checks plist syntax, and a later `grep` showed the edit had silently done nothing (a
-macOS/BSD `sed` incompatibility swallowed it with no error - see `playbooks/ios-swift.md`
-IOS-033). After any edit made by a script/tool rather than by hand, confirm the specific
+reported as clean because a syntax lint passed on the project file afterward; the lint
+only checks syntax, and a later `grep` showed the edit had silently done nothing (a
+macOS/BSD `sed` incompatibility swallowed it with no error; a stack playbook entry covers it). After any edit made by a script/tool rather than by hand, confirm the specific
 change actually happened (grep for what should be gone/present) - don't let "the validator
 didn't complain" stand in for "the edit worked." These are different claims, and a
 format/syntax validator is blind to the second one by construction.
@@ -69,8 +68,8 @@ for later cleanup, never silently ignored, but never a reason the current task c
 
 If there's more to review than can get genuine attention within budget, don't silently
 truncate and present something that looks complete but isn't. Prioritize the
-highest-risk files first (anything touching auth/tokens, Core Data or equivalent
-persistence, concurrency, entitlements/capabilities, or a shared callback/hook), review
+highest-risk files first (anything touching auth/tokens, the persistence layer,
+concurrency, permission/capability config, or a shared callback/hook), review
 those thoroughly, and explicitly state which files were not reached and why. A disclosed
 partial review is honest; an undisclosed one is actively misleading.
 
@@ -112,7 +111,7 @@ but **not at the same depth for everything touched**. Scope the depth to the ris
 uniformly to every line:
 
 - **High-risk domains get the full exhaustive treatment**: anything touching auth/session/
-  token handling, persistence (Core Data or equivalent), concurrency, a public/shared API
+  token handling, persistence, concurrency, a public/shared API
   surface, or a contract genuinely invoked from more than one place. Full cross-repo
   search, full live-source verification, no shortcuts.
 - **Low-risk code gets a lighter, explicitly-scoped check**: a private helper used only
@@ -166,7 +165,7 @@ the same exhaustive budget on code that was never at risk in the first place.
   with no textual conflict, is not the same as one that's semantically compatible - a real
   incident shipped a file that merged without conflict but still called a method as if it
   returned its pre-merge type, because the other side of the merge had changed that method's
-  return type and no conflict marker ever flagged it (see `playbooks/ios-swift.md` IOS-028).
+  return type and no conflict marker ever flagged it (a stack playbook entry covers this shape).
   After resolving any merge, run the cross-call-site check above against every
   type/method/property whose declaration changed on either side of the merge - across every
   file the merge touched, not only the files git reported as conflicted. This is a specific,

@@ -8,7 +8,7 @@ open one section of it only when applying that check in depth, never at task sta
 ## Severity scale
 
 - **CRITICAL** - will crash, corrupt data, deadlock, or is a real race condition.
-- **HIGH** - memory leak, retain cycle, actor-isolation violation, Core Data misuse,
+- **HIGH** - memory leak, retain cycle, data race or isolation violation, misuse of the persistence layer,
   security issue, or a state-consistency bug that makes a mandatory/enforced flow (forced
   update, required auth, a blocking gate) appear to succeed or complete when it didn't.
 - **MEDIUM** - SOLID/DRY violation, architecture boundary violation, duplicate logic
@@ -78,7 +78,7 @@ that a CRITICAL/HIGH in a high-risk area can be missed - that is the trade, not 
   `probed` or `ran`; otherwise report them at Confidence: Low. Don't call something
   "verified" if it was only read; don't undersell something actually reproduced.
 - **Disclose partial coverage.** Oversized diff: review highest-risk files first
-  (auth/tokens, persistence, concurrency, entitlements, shared hooks) and name the files not
+  (auth/tokens, persistence, concurrency, permission/capability config, shared hooks) and name the files not
   reached. Tests: name exactly which targets/suites ran - "1302 passed, 3 failed" is
   misleading if it describes two of the three targets covering the diff.
 - **Estimates are guesses unless measured.** Say so. A number carried over or re-split from
@@ -131,9 +131,9 @@ ambiguity so the next pass is cheaper.
   "done" claims that a fresh reader then broke cost trust and a review round each time.
 - **Tests ship with the code, with honest expected values.** New logic gets its tests in the
   same task, in a folder that is part of a compiled target; expected values come from the
-  requirement, not the code's output (IOS-038, IOS-043). Know the repo's CI gates (e.g.
+  requirement, not the code's output (see the stack playbook). Know the repo's CI gates (e.g.
   diff coverage) and check them before pushing. Changing a field's source: sweep its tests
-  (IOS-041).
+  (see the stack playbook).
 - **Independent pass.** Before a PR is raised, a pass by something other than the context
   that wrote the change is required: a fresh reviewer session or subagent, a separate review
   tool, or a human. Scope follows the Mode table above (every non-trivial change in

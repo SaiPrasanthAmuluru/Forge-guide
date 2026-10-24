@@ -25,7 +25,7 @@ section, ~25 lines:
   freshness, and who else reads or writes it (shared contracts get the cross-call-site
   check).
 - **Boundaries crossed** - permission/role, record ownership, tenant/session switch,
-  logout mid-flow (IOS-012, IOS-035, IOS-036).
+  logout mid-flow (the stack playbook has examples).
 - **Closest existing analogue** - the feature to follow, and how this one differs. List its
   vertical slice, one file per layer (view, view model, use case, repository, API, router,
   test), and read the signatures of each before writing the new code. New code matches the
@@ -44,11 +44,11 @@ section, ~25 lines:
   uses (`xref.sh <name> --max 3`) and match their arguments, error handling and style; the
   "used Nx" count tells you which form is the convention.
 - **Rules per path** - for each rule in the request, the entry points, the sibling screens
-  sharing the component and the row/item types it must hold on (IOS-047). A rule is not
+  sharing the component and the row/item types it must hold on. A rule is not
   done until it is confirmed on each.
 - **Other platforms** - if web or Android already ships this, how it presents real data
   (grouping, duplicates, empty states, labels) and what the design says, before building
-  UI from the API shape (IOS-048).
+  UI from the API shape.
 - **Tests** - what covers this area today, and what does not.
 
 Budget: grep to find hops, then read only signatures and the lines in the path

@@ -116,7 +116,7 @@ handling **rule staleness** as a codebase evolves. It does this without heavy ce
     dependency; stack lessons are per-language playbooks. Both entry files stay short on purpose - evidence shows bloated or
     LLM-expanded instruction files hurt agent performance and inflate cost rather than
     helping.
-14. **Platform / language currency check** - generalized past iOS: every ecosystem has its
+14. **Platform / language currency check** - every ecosystem has its
     own deprecation lifecycle, checked against the project's own declared minimum target,
     preferring existing ecosystem tooling over reasoning from memory on a fast-moving
     surface.
@@ -161,7 +161,7 @@ Forge-guide/
 │   ├── quality-gate.md       # CORE rulebook (~2K tokens): severity, gate, modes, mandatory checks
 │   └── quality-gate-detail.md # rationale + incidents; read one section on demand, never at start
 ├── playbooks/
-│   ├── ios-swift.md          # Seen/Action entries from real production incidents
+│   ├── ios-swift.md          # example stack playbook: Seen/Action entries from real incidents
 │   └── _template.md          # format + rules for adding a new stack playbook honestly
 ├── context/
 │   ├── context-scan.md       # already-exists / already-fixed checks + snapshot caching logic
@@ -191,6 +191,7 @@ Forge-guide/
 │   └── suppressions.md       # audit trail for waived MEDIUM findings
 ├── scripts/
 │   ├── pr-range.sh           # PR number or branch -> exact base/head commits, no checkout
+│   ├── neutrality-check.sh   # fails if a core file names a specific agent or stack (those belong in adapters/ and playbooks/)
 │   ├── local-changes.sh      # what is uncommitted/unpushed in this checkout, and the commands to review it
 │   ├── map-probe.sh          # stack-neutral fact sheet (shape, scope, tests, gates) used to build the map
 │   ├── xref.sh               # dependency-free call-site finder for the cross-call-site check
@@ -312,8 +313,7 @@ rubric, gate and verdict are identical to a PR review.
    to skip, which files need a checker).
 3. Open a fresh agent session and say "Use review/review-prompt.md as the review rubric;
    base <sha>, head <sha>; Mode: standard; PR description: ...". A fresh context is what
-   makes it an independent pass. (Claude Code users can instead call the packaged
-   subagent: `forge-reviewer: review <base>..<head>`.)
+   makes it an independent pass. (Tools with subagents can use a packaged reviewer from `adapters/`.)
 4. The result is Markdown with a `Reviewed: ... | Pass: ... | Coverage: ...` header, graded
    findings, a mechanical verdict and a Checks-run block. Post it as a PR comment yourself;
    nothing is posted automatically. After new pushes, run step 1 again and say

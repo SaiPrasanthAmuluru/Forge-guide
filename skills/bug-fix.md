@@ -26,7 +26,7 @@ spec or ticket doesn't say, that is the first question - fixing toward a guessed
 "correct" behavior is how a fix lands on the wrong thing.
 
 Evidence before cause: for async, notification or rendering behavior, ask for the log or
-HTML/state dump before proposing a fix; a traced call path is a hypothesis (IOS-030).
+HTML/state dump before proposing a fix; a traced call path is a hypothesis.
 When applying a reviewer's suggested fix, validate it against how the data is actually used
 first (a suggestion that cleared one of two lists would have brought the old data back).
 

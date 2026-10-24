@@ -3,14 +3,14 @@
 Append-only. Rough numbers are fine - the point is the trend, not precision. Roll old
 entries into a monthly summary once this gets long (AGENTS.md, Maintenance).
 
-**How to fill "Tokens":** note the session token count (your tool's usage readout, e.g. `/cost` in Claude Code)
+**How to fill "Tokens":** note the session token count (your tool's usage readout)
 before the task and after it; the difference is the task's cost. If you only have one
 reading per session, record the session total and say so in Notes. A guess marked `~` beats
 a blank cell - blank is what hid the cost trend before.
 
 | Date | Task | Type | Mode | Tokens (Δ) | Clarif. rounds | Full-file regens | Playbook IDs loaded | Notes |
 |------|------|------|------|-----------|----------------|------------------|---------------------|-------|
-| <date> | <task name> | gen / fix / review / merge / report | strict / standard / fast | <~n> | <n> | <n> | <e.g. IOS-001, IOS-028> | <e.g. "base-snapshot stale, refresh read 3 files"> |
+| <date> | <task name> | gen / fix / review / merge / report | strict / standard / fast | <~n> | <n> | <n> | <e.g. <STACK>-001> | <e.g. "base-snapshot stale, refresh read 3 files"> |
 
 ## Reading the trend
 

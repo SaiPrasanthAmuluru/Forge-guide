@@ -14,7 +14,7 @@ criterion from `spec.md` explicitly - "it compiles" and "it runs" are not verifi
 ## Tests and CI gates (before pushing)
 
 - [ ] New logic has tests in a compiled target; expected values come from the requirement
-- [ ] Tests asserting any field whose source changed were swept (IOS-041)
+- [ ] Tests asserting any field whose source changed were swept
 - [ ] CI gates known and checked locally where possible (e.g. diff coverage <threshold>): <result>
 
 ## Divergences

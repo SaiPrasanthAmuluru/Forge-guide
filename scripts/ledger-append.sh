@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ledger-append.sh - add one row to logs/token-ledger.md in a single command.
-# Usage: ledger-append.sh "<task>" <gen|fix|review|merge|report> <strict|standard|fast> "<~tokens>" <clarif> <regens> "<IOS ids>" "<notes>"
+# Usage: ledger-append.sh "<task>" <gen|fix|review|merge|report> <strict|standard|fast> "<~tokens>" <clarif> <regens> "<playbook ids>" "<notes>"
 set -eu
 [ "$#" -eq 8 ] || { echo "usage: $0 task type mode tokens clarif regens ids notes" >&2; exit 1; }
 # Where the ledger lives: $FORGE_STATE if set; the toolkit's own logs/ when the toolkit IS the

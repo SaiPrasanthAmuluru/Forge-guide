@@ -4,15 +4,21 @@
 # a --budget cut-off, and are the ones that get the full mandatory-check treatment.
 #
 # Keep this list short and specific to your codebase: every pattern that matches too much
-# turns "high risk" into "everything" and the saving disappears. Edit freely.
+# turns "high risk" into "everything" and the saving disappears. Edit freely. The defaults
+# below are generic; add your stack's own entries (examples in the comments).
 
 # auth / session / credentials
-(^|/)[^/]*(auth|login|logout|session|token|keychain|credential|oauth|biometric)
-# persistence
-\.xcdatamodel
-(^|/)[^/]*(coredata|persistence|migration|localrepo|database)
-# capability / entitlement config (reviewed like source code - IOS-015)
-\.entitlements$
-(^|/)info\.plist$
+(^|/)[^/]*(auth|login|logout|session|token|keychain|credential|oauth|biometric|secret)
+# persistence / schema
+(^|/)[^/]*(persistence|migration|database|schema|repository)
+# permission / capability config, reviewed like source code
+(^|/)[^/]*(permission|entitlement|capabilit)
 # concurrency primitives
-(^|/)[^/]*(actor|dispatch|concurren|mutex|semaphore)
+(^|/)[^/]*(actor|dispatch|concurren|mutex|semaphore|thread|lock)
+# deployment / pipeline config
+(^|/)(dockerfile|\.github/workflows/|azure-pipelines)
+# stack examples (uncomment what applies):
+# \.xcdatamodel                 # Core Data models
+# (^|/)info\.plist$             # iOS app config
+# (^|/)androidmanifest\.xml$    # Android app config
+# (^|/)(build\.gradle|package\.json|pom\.xml)$   # dependency manifests

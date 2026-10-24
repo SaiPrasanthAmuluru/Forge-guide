@@ -46,7 +46,7 @@ answered. This changes *when* context gets read, not which checks run.
    file, lockfile-only), or already carries a review from this rubric on the same head
    commit. Otherwise take its output as the plan: READ files in the order given (riskiest
    first), SKIP the named files without opening them, run a checker on STRUCTURAL files
-   (project files - IOS-029) instead of reading their diffs, and use `--budget` on an
+   (project/build manifests) instead of reading their diffs, and use `--budget` on an
    oversized diff so what isn't reached is named in the summary rather than silently
    dropped.
    - **Impact and reuse scans (cheap, local).** Run `scripts/impact.sh <base> <head>` and
@@ -154,7 +154,7 @@ are not findings and do not change the verdict, but an unanswered one on a publi
 ownership decision is a category-20 finding.
 
 End with a **Checks run** block, one line per mandatory check actually performed, with what
-was searched and what was found, e.g. `Sibling: searched *ViewModel+API.swift (6 files),
+was searched and what was found, e.g. `Sibling: searched *Service*.<ext> (6 files),
 2 more instances` or `Cross-call-site: onAction, 4 call sites via xref.sh`. A check with no line was
 not done - say "not run: <reason>" rather than omitting it.
 
@@ -183,7 +183,7 @@ Severity scale, gate behavior, confidence, and suppression: see `memory/quality-
 
 End with a **What this diff got right** section when applicable (omit in `standard` and
 `fast` Mode unless asked), limited to *playbook-verified applications*: a specific
-playbook rule ID that the diff applies correctly (e.g. "IOS-020's fix, correctly applied in
+playbook rule ID that the diff applies correctly (e.g. "<ID>'s fix, correctly applied in
 both places"). Never praise a new public API shape, a new type/file/parameter, or any
 design where a question is still open - praising a design is how an unchallenged design
 gets waved through. Skip the section if there is nothing to cite.
@@ -279,7 +279,7 @@ entries matching what the diff touches.
     wrong is worse than absent). Also compare the PR description / commit message against
     the diff: a stated scope the code contradicts (e.g. "open requests" while the code also
     allows approved ones) is MEDIUM.
-16. **Entitlements & capability configuration** - see the stack playbook; treat with source
+16. **Permission & capability configuration** - see the stack playbook; treat with source
     code rigor, not "just config."
 17. **Security** - input validation, auth checks, secrets/credentials (never hardcoded,
     never logged, never in a URL), injection risks. Token/credential findings default to
@@ -296,7 +296,7 @@ entries matching what the diff touches.
     service the diff introduces: why does it belong here, who should own this decision,
     could it be avoided or kept internal? Where ownership or permission is decided from
     data ("this action is self-only"), is it checked against the loaded record rather than
-    inferred from an absent id (IOS-036)? A design question the diff cannot answer is a
+    inferred from an absent id? A design question the diff cannot answer is a
     MEDIUM finding at Confidence: Low or Medium, worded as the question to be answered;
     waivable like any MEDIUM. A design the author wrote is the likeliest to pass
     unquestioned - this is the category an independent pass exists for.

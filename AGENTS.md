@@ -55,8 +55,8 @@ one section of `memory/quality-gate-detail.md` when applying a check in depth;
 - A merge isn't done when conflict markers are gone: run the post-merge
   signature-compatibility check on every changed type/method across every touched file,
   conflicted or not; if generated or structural project files (manifests, lockfiles) are
-  touched, run a structural check for stale references regardless of conflicts (iOS:
-  IOS-028/IOS-029 in the stack playbook).
+  touched, run a structural check for stale references regardless of conflicts (the stack
+  playbook names the checker).
 
 ## After writing code
 
@@ -108,7 +108,9 @@ loads, so rules and playbook entries that go unused or get overridden repeatedly
 candidates for removal. New recurring bug shapes get a Seen/Action entry in the relevant
 `playbooks/<stack>.md` (`playbooks/_template.md`) - only after they actually happen. While
 dogfooding, log one entry in `logs/test-runs.md` per real task. Savings or recall claims are
-measured with `evals/README.md`, not estimated.
+measured with `evals/README.md`, not estimated. Before changing a core file, keep it
+agent- and stack-neutral: `scripts/neutrality-check.sh` fails if it names one (tool-specific
+wiring belongs in `adapters/`, stack lessons in `playbooks/<stack>.md`).
 
 **Where state lives.** When the toolkit is the project, `specs/`, `logs/` and `session-state.md`
 sit beside this file; when it is kept outside the project, they live in the project under

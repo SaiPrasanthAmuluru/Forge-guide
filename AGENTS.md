@@ -5,7 +5,10 @@ Mode: strict
 <!-- strict | standard | fast - see `memory/quality-gate.md` "Check depth mode". -->
 
 Single entry point for any agent (the open `AGENTS.md` convention). `CLAUDE.md` only imports
-this file for tools that look for that name, so there is one copy to maintain. Kept short on
+this file for tools that look for that name, so there is one copy to maintain. Tool-specific
+extras live under `adapters/`; the rules here assume only that the agent can read files, and
+that it can run shell commands (if it cannot, ask the developer to run a script and paste the
+output, or use plain `git diff` and text search). Kept short on
 purpose: a bloated instruction file hurts performance and inflates cost; detail lives in the
 linked files (`memory/`, `playbooks/`, `skills/`, `review/`), loaded only when needed.
 
@@ -91,7 +94,7 @@ is staged or changed): one pass with a token-aware flow (`scripts/diff-scope.sh`
 triage → diff-only candidate pass → targeted confirmation), same gate and playbooks as
 generation. Re-reviews of an updated PR are incremental (commits since the last reviewed
 head, plus re-confirming open findings). Where subagents exist, run the review in a
-read-only reviewer with its own context (a fresh session, or for Claude Code `.claude/agents/forge-reviewer.md`). If "review"
+read-only reviewer with its own context (a fresh session, or a packaged subagent from `adapters/`). If "review"
 is ambiguous about which rubric, ask once before starting.
 
 ## Reporting on a batch of work

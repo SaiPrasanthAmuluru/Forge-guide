@@ -11,8 +11,8 @@ playbook entry), because replaying it costs real tokens.
 
 ## Replay procedure
 
-1. For each case whose "Expected to be caught by" item the change touched, run the
-   `forge-reviewer` subagent on `<base>..<head_before_fix>` (the diff as it was before the
+1. For each case whose "Expected to be caught by" item the change touched, run a
+   fresh review (the reviewer subagent where available) on `<base>..<head_before_fix>` (the diff as it was before the
    reviewer's comment was addressed).
 2. Record whether a finding matching "What was missed" appears. Add a row to the log below.
 3. A rubric change that makes a previously-caught case stop being caught is rejected or

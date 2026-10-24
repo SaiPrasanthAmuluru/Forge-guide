@@ -17,7 +17,7 @@ real tasks and the token counter you already have.
 
 ## Arms (change one thing at a time)
 
-- **A - plain:** Claude Code with no toolkit and no project rules file. Same model, same task.
+- **A - plain:** the same agent with no toolkit and no project rules file. Same model, same task.
 - **B - lean:** the toolkit with `Mode: standard`.
 - **C - strict:** the toolkit with `Mode: strict` (the default).
 

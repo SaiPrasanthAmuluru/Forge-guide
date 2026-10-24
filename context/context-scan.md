@@ -71,8 +71,8 @@ missed entirely. Don't let a fresh-looking snapshot substitute for these.
 
 ## Context tools: local only, no new dependencies
 
-Order of preference for finding things: (1) the agent's own search (Glob / Grep / Read,
-or an Explore-style subagent for broad sweeps) - the default and enough for most work;
+Order of preference for finding things: (1) the agent's own search (file search, text search and read,
+or a search subagent for broad sweeps where the tool has one) - the default and enough for most work;
 (2) a local symbol or reference tool (language-server or IDE backed, a tree-sitter outline)
 only if the session already has one - use it for "who references this" and symbol
 outlines, since it is exact where text search is approximate; (3) `scripts/map-probe.sh`

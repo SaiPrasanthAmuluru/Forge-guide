@@ -85,5 +85,5 @@ fi
 echo
 echo "Next:"
 echo "  scripts/diff-scope.sh $(git rev-parse --short "$base") $(git rev-parse --short "$head")      # cheap triage: what to read, skip, check"
-echo "  Fresh agent session: use review/review-prompt.md, base $(git rev-parse --short "$base"), head $(git rev-parse --short "$head")  (Claude Code: forge-reviewer: review <base>..<head>)"
+echo "  Fresh agent session: use review/review-prompt.md, base $(git rev-parse --short "$base"), head $(git rev-parse --short "$head")  (adapters/ has packaged reviewers)"
 echo "  After new pushes, re-run this and say:  incremental, last reviewed head <old sha>"

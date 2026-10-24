@@ -135,7 +135,7 @@ ambiguity so the next pass is cheaper.
   diff coverage) and check them before pushing. Changing a field's source: sweep its tests
   (IOS-041).
 - **Independent pass.** Before a PR is raised, a pass by something other than the context
-  that wrote the change is required: the `forge-reviewer` subagent, a separate review
+  that wrote the change is required: a fresh reviewer session or subagent, a separate review
   tool, or a human. Scope follows the Mode table above (every non-trivial change in
   `strict`; high-risk domains - concurrency, persistence ordering, shared
   checkpoint/contract - plus any new public type, parameter or ownership decision in

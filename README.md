@@ -57,8 +57,8 @@ much is searched and re-checked, never the severities or the verdict.
 **Where your project's state goes:** `<project>/.forge/` (specs, logs, session state).
 Add `.forge/` to `.git/info/exclude` if you do not want it committed.
 
-Optional adapters: a Claude Code reviewer subagent and an optional no-agent-PRs hook are included under
-`.claude/` and `scripts/pr-gate.sh`. Everything works without them.
+Paste-ready prompts for any agent are in `adapters/generic/prompts.md`. Tool-specific extras
+(a packaged reviewer subagent, an optional hook) live under `adapters/` and are never required.
 
 ## Principles for the developer's trust
 
@@ -208,9 +208,9 @@ Forge-guide/
 │   ├── verify-spec.sh
 │   ├── check-context-freshness.sh  # cheap staleness check for base-snapshot.md
 │   └── refresh-context.sh          # shows what changed since the last snapshot
-└── .claude/
-    ├── settings.json         # optional Claude Code adapter: PreToolUse hook running pr-gate.sh (agents may not open PRs)
-    └── agents/forge-reviewer.md  # optional Claude Code adapter: read-only reviewer subagent
+└── adapters/                 # optional, tool-specific wiring; the rules never depend on it
+    ├── generic/prompts.md    # paste-ready prompts: review a PR, review local changes, generate, report
+    └── claude-code/          # reviewer subagent + PR-blocking hook for Claude Code
 ```
 
 ## Context before code: map, then flow, then questions
@@ -282,18 +282,13 @@ project's git.
 - **Pull requests are your decision.** The rules already say an agent never commits, pushes or
   opens a PR unless you ask. `scripts/pr-gate.sh` is an optional hook that enforces it: it
   blocks `gh pr create` / `az repos pr create` when an agent runs them. Say yes for a session
-  with `FORGE_ALLOW_PR=on`, or run the command yourself. In Claude Code, add it to
-  `~/.claude/settings.json` (use your real path) and check `/hooks`:
-  ```json
-  { "hooks": { "PreToolUse": [ { "matcher": "Bash", "hooks": [
-    { "type": "command", "command": "/path/to/Forge-guide/scripts/pr-gate.sh" } ] } ] } }
-  ```
+  with `FORGE_ALLOW_PR=on`, or run the command yourself. It needs an agent that can run a
+  command before its shell calls; the Claude Code wiring is in `adapters/claude-code/`.
   The independent-pass line in `verification.md` is your record that a fresh review happened;
   `verify-spec.sh` still checks it, but nothing forces a PR.
 - **A reviewer in its own context** is what makes the pass independent. Any agent can do this
-  as a fresh session pointed at `review/review-prompt.md`. For Claude Code,
-  `.claude/agents/forge-reviewer.md` packages it as a read-only subagent; copy it to
-  `~/.claude/agents/` to use it in every project.
+  as a fresh session pointed at `review/review-prompt.md` (prompts in `adapters/generic/`). Tools
+  with subagents can package it; Claude Code's is in `adapters/claude-code/`.
 
 ## Reviewing local changes (before you commit)
 
@@ -334,28 +329,13 @@ Tested against local and bare-remote repositories, not against a live Azure DevO
 the merge-ref parent order on Azure DevOps is assumed to match GitHub, which is why the
 script prints both subjects.
 
-## Optional: Claude Code reviewer subagent
+## Adapters (optional)
 
-`.claude/agents/forge-reviewer.md` defines a read-only reviewer for Claude Code. It is
-picked up automatically when you work inside this folder; for your own project, copy it into
-`.claude/agents/` (or `~/.claude/agents/` for every project). Its `model:` line is explicit
-on purpose - raise it for a `strict` review of auth, session or persistence work. Other
-agents get the same behaviour from a fresh session plus `review/review-prompt.md`. Before
-raising a PR, run the review on the branch and tick the "Independent pass" line in the
-spec's `verification.md`.
-
-## Measuring agents and skills (session reports)
-
-Three append-only logs, summed by one script, answer "what is this costing and is it
-working": `scripts/ledger-append.sh` (a row per task), `scripts/phase-log.sh` (a row per
-phase: map, flow, questions, scans, generate, self-check, review, rework - with tokens, files
-read and why more context was needed) and `scripts/finding-log.sh` (a row per finding: who
-found it, whether it was real, which check should have caught it). `scripts/report-metrics.sh
-[since-date]` prints tokens by task type and phase, the costliest tasks, the escape rate
-(real findings that a human reviewer, another agent, CI or production caught after our own
-passes did not), precision per pass, which checks missed the escapes, and playbook entries
-that were cited but never loaded. `skills/session-report.md` turns that into the report.
-Nothing here is estimated by the scripts: blank figures are left out, not guessed.
+`adapters/generic/prompts.md` has paste-ready prompts that work in any agent. `adapters/claude-code/`
+holds a read-only reviewer subagent and a hook that stops an agent opening PRs by itself. Add one
+for another tool by wiring only: where it reads instructions (point it at `AGENTS.md`), how it
+starts a separate reviewer context, how it limits tools. Before a PR, record the review in the
+"Independent pass" line of the spec's `verification.md`.
 
 ## Flow
 

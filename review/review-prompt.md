@@ -91,13 +91,12 @@ outcome. Do not dismiss a gap as "niche" before reading how the existing code pa
 the same value.
 
 For a long session, run the review in a separate reviewer context (a fresh session, or a
-subagent where the tool has them; Claude Code ships `.claude/agents/forge-reviewer.md`): it reads the diff and rules in its own context and
-returns only the findings, so the main session doesn't carry the whole diff in every later
-turn. Its fresh context also counts as the independent pass the quality gate requires for
-high-risk domains. Its `model:` is set explicitly in the file (subagents otherwise inherit
-the parent's model); raise it for a `strict` review of auth/session/persistence work. If you
-run the review headless, cap runaway cost with `--max-turns` and restrict tools with
-`--allowedTools`/`--disallowedTools`.
+subagent where the tool has them; see `adapters/`): it reads the diff and rules in its own
+context and returns only the findings, so the main session doesn't carry the whole diff in every
+later turn. Its fresh context also counts as the independent pass the quality gate requires for
+high-risk domains. Use a stronger model for a `strict` review of auth/session/persistence work.
+If you run the review headless, cap runaway cost with the tool's turn limit and restrict it to
+read-only tools plus the toolkit scripts.
 
 For every tool call in a review: have a stated purpose; don't probe whether tools work or
 make exploratory calls; when locating things, return paths and line numbers rather than file
@@ -143,7 +142,7 @@ linter to confirm a lint-catchable issue.
 
 Start with the header line (`Reviewed: <base>..<head> | Pass: ... | Mode: ... | Coverage:
 ...`). `Pass: independent` only if this review ran in a fresh context that did not write
-the change (the `forge-reviewer` subagent, a separate tool, a human); otherwise
+the change (a fresh reviewer session or subagent, a separate tool, a human); otherwise
 `Pass: author (not independent)`.
 
 Before the findings, if the PR description has no decisions/rationale section, say so and

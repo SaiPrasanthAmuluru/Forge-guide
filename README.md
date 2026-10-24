@@ -211,6 +211,8 @@ Forge-guide/
 │   └── refresh-context.sh          # shows what changed since the last snapshot
 └── adapters/                 # optional, tool-specific wiring; the rules never depend on it
     ├── generic/prompts.md    # paste-ready prompts: review a PR, review local changes, generate, report
+    ├── ci/                   # PR review in CI on GitHub, Azure DevOps, GitLab, Bitbucket (any agent)
+    ├── github-actions/       # alternative GitHub template that uses a vendor action
     └── claude-code/          # reviewer subagent + PR-blocking hook for Claude Code
 ```
 
@@ -330,6 +332,13 @@ the merge-ref parent order on Azure DevOps is assumed to match GitHub, which is 
 script prints both subjects.
 
 ## Adapters (optional)
+
+`adapters/ci/` has templates that post an automatic review comment on every PR on GitHub, Azure
+DevOps, GitLab or Bitbucket, using `scripts/ci-review.sh` and whichever agent you set in
+`FORGE_AGENT_CMD` (setup in its README; the runner is tested against mock servers, the templates
+not yet on live hosts). `adapters/github-actions/` is an alternative GitHub-only template. This repo's own
+`.github/workflows/checks.yml` runs plain checks on every push and PR: script syntax, executable
+bits, the neutrality check and the dash check. No secrets involved.
 
 `adapters/generic/prompts.md` has paste-ready prompts that work in any agent. `adapters/claude-code/`
 holds a read-only reviewer subagent and a hook that stops an agent opening PRs by itself. Add one

@@ -7,6 +7,8 @@ None is required.
 | Folder | For | What it contains |
 |---|---|---|
 | `generic/` | Any agent that can read files | Paste-ready prompts for review, generation and reports |
+| `ci/` | Any CI host and any agent | PR review comments on GitHub, Azure DevOps, GitLab, Bitbucket via `scripts/ci-review.sh` |
+| `github-actions/` | GitHub | Alternative template using a vendor action |
 | `claude-code/` | Claude Code | A read-only reviewer subagent and an optional PR-blocking hook |
 
 ## What an agent needs

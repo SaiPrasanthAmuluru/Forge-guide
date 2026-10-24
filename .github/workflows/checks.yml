@@ -1,0 +1,37 @@
+# Plain checks on every push and pull request. No secrets, no external services, safe for forks.
+name: Checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell scripts parse
+        run: |
+          for f in scripts/*.sh scripts/probes/*.sh; do
+            bash -n "$f" || { echo "syntax error in $f"; exit 1; }
+          done
+
+      - name: Scripts keep their executable bit
+        run: |
+          bad="$(git ls-files -s 'scripts/*.sh' 'scripts/probes/*.sh' | awk '$1 != "100755" {print $4}')"
+          if [ -n "$bad" ]; then echo "not executable in git:"; echo "$bad"; exit 1; fi
+
+      - name: Core stays agent- and stack-neutral
+        run: scripts/neutrality-check.sh
+
+      - name: No long dashes in the repo
+        run: |
+          em="$(printf '\342\200\224')"; en="$(printf '\342\200\223')"
+          if grep -rIn --exclude-dir=.git -e "$em" -e "$en" . ; then echo "replace long dashes with plain hyphens"; exit 1; fi
+
+      - name: Playbook index works
+        run: scripts/playbook.sh stacks

@@ -1,0 +1,19 @@
+# GitLab: review every merge request with Forge-guide and post the result as an MR note.
+# UNTESTED TEMPLATE: try it on a throwaway merge request first.
+# Add to .gitlab-ci.yml. In Settings > CI/CD > Variables add (masked):
+#   GITLAB_TOKEN         a project access token with the `api` scope (role Reporter or higher)
+#   FORGE_AGENT_CMD      your agent command: reads the request on stdin, prints the review
+#   FORGE_AGENT_INSTALL  optional command that installs your agent CLI
+#   <your agent's own credential variable>
+forge-review:
+  stage: test
+  image: ubuntu:24.04
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - apt-get update -qq && apt-get install -y -qq git curl ca-certificates >/dev/null
+    - git clone --depth 1 --branch main https://github.com/SaiPrasanthAmuluru/Forge-guide.git /tmp/forge
+    - if [ -n "$FORGE_AGENT_INSTALL" ]; then sh -c "$FORGE_AGENT_INSTALL"; fi
+    - /tmp/forge/scripts/ci-review.sh --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA" --head "$CI_COMMIT_SHA" --pr "$CI_MERGE_REQUEST_IID" --host gitlab

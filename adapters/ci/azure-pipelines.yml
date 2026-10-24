@@ -1,0 +1,37 @@
+# Azure DevOps: review every pull request with Forge-guide and post the result as a PR comment.
+# UNTESTED TEMPLATE: try it on a throwaway PR first.
+#
+# Azure Repos does not trigger `pr:` from YAML. Instead: Project settings > Repositories >
+# <repo> > Policies > Branch policies > <target branch> > Build validation > add this pipeline.
+# Then in the pipeline set these variables (mark the key one secret):
+#   FORGE_AGENT_CMD      your agent command: reads the request on stdin, prints the review
+#   FORGE_AGENT_INSTALL  optional command that installs your agent CLI on the build agent
+#   <your agent's own credential variable>, as a secret
+# The build service identity needs "Contribute to pull requests" on the repo to post comments.
+trigger: none
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+    fetchDepth: 0
+    persistCredentials: false
+
+  - script: |
+      git clone --depth 1 --branch main https://github.com/SaiPrasanthAmuluru/Forge-guide.git "$(Agent.TempDirectory)/forge"
+      # pin: add  --branch <tag>  instead of main so later changes cannot alter your reviews
+      if [ -n "$FORGE_AGENT_INSTALL" ]; then sh -c "$FORGE_AGENT_INSTALL"; fi
+    displayName: Fetch Forge-guide and install the agent
+    env:
+      FORGE_AGENT_INSTALL: $(FORGE_AGENT_INSTALL)
+
+  - script: |
+      # In a PR build the checkout is the merge commit: parent 1 = target tip, parent 2 = source tip.
+      "$(Agent.TempDirectory)/forge/scripts/ci-review.sh" \
+        --base HEAD^1 --head HEAD^2 --pr "$(System.PullRequest.PullRequestId)" --host azure
+    displayName: Forge review
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      FORGE_AGENT_CMD: $(FORGE_AGENT_CMD)

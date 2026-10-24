@@ -1,0 +1,22 @@
+# Bitbucket Cloud: review every pull request with Forge-guide and post the result as a PR comment.
+# UNTESTED TEMPLATE: try it on a throwaway PR first.
+# Add to bitbucket-pipelines.yml. In Repository settings > Repository variables add (secured):
+#   BITBUCKET_TOKEN      a repository access token with Pull requests: Write
+#   FORGE_AGENT_CMD      your agent command: reads the request on stdin, prints the review
+#   FORGE_AGENT_INSTALL  optional command that installs your agent CLI
+#   <your agent's own credential variable>
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: Forge review
+          image: ubuntu:24.04
+          script:
+            - apt-get update -qq && apt-get install -y -qq git curl ca-certificates >/dev/null
+            - git clone --depth 1 --branch main https://github.com/SaiPrasanthAmuluru/Forge-guide.git /tmp/forge
+            - if [ -n "$FORGE_AGENT_INSTALL" ]; then sh -c "$FORGE_AGENT_INSTALL"; fi
+            - git fetch origin "$BITBUCKET_PR_DESTINATION_BRANCH"
+            - /tmp/forge/scripts/ci-review.sh --base "$(git merge-base FETCH_HEAD HEAD)" --head "$BITBUCKET_COMMIT" --pr "$BITBUCKET_PR_ID" --host bitbucket

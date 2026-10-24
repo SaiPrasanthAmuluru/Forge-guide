@@ -1,0 +1,41 @@
+# GitHub Actions variant that uses the same host-neutral runner as the other hosts.
+# (adapters/github-actions/pr-review.yml is the alternative that uses a vendor action.)
+# UNTESTED TEMPLATE. Copy to <repo>/.github/workflows/forge-review.yml.
+# Repo secrets: FORGE_AGENT_CMD (your agent command: stdin request -> stdout review),
+# optional FORGE_AGENT_INSTALL, and your agent's own credential. Workflow permissions: read/write.
+name: Forge review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository   # forks get no secrets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: SaiPrasanthAmuluru/Forge-guide
+          ref: main            # pin to a tag or commit SHA
+          path: .forge-toolkit
+      - name: Install the agent (optional)
+        if: env.FORGE_AGENT_INSTALL != ''
+        run: sh -c "$FORGE_AGENT_INSTALL"
+        env:
+          FORGE_AGENT_INSTALL: ${{ secrets.FORGE_AGENT_INSTALL }}
+      - name: Forge review
+        run: |
+          .forge-toolkit/scripts/ci-review.sh \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --pr "${{ github.event.pull_request.number }}" --host github
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORGE_AGENT_CMD: ${{ secrets.FORGE_AGENT_CMD }}

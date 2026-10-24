@@ -1,0 +1,63 @@
+# Forge-guide: automatic review of every pull request, posted as a PR comment.
+# Copy this file to <your-repo>/.github/workflows/forge-review.yml
+# UNTESTED TEMPLATE: try it on a throwaway PR first.
+#
+# One-time setup per repo:
+#   1. Create a model credential and save it as a repo secret (Settings > Secrets and variables
+#      > Actions). This template uses CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`);
+#      an ANTHROPIC_API_KEY secret works too (swap the input name below).
+#   2. Settings > Actions > General > Workflow permissions: Read and write.
+# Notes:
+#   - PRs from forks are skipped (GitHub gives them no secrets).
+#   - The diff is sent to the model provider configured here. Use it only where that is allowed.
+#   - Only the "Review" step is tool-specific; swap it for another agent's action or CLI and
+#     keep the rest (checkout the project, checkout the toolkit, give the same prompt).
+#   - Never switch this to pull_request_target: it would hand secrets to untrusted code.
+name: Forge review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: forge-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout the project (full history so base..head works)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Forge-guide (the rules and scripts)
+        uses: actions/checkout@v4
+        with:
+          repository: SaiPrasanthAmuluru/Forge-guide
+          ref: main            # pin to a tag or commit SHA so later changes cannot alter your reviews
+          path: .forge-toolkit
+
+      - name: Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          use_sticky_comment: true
+          prompt: |
+            Use .forge-toolkit/review/review-prompt.md as the review rubric.
+            Mode: standard. This is a fresh, read-only review: do not edit files.
+            Pull request #${{ github.event.pull_request.number }}.
+            Base: ${{ github.event.pull_request.base.sha }}
+            Head: ${{ github.event.pull_request.head.sha }}
+            Run the toolkit scripts by path (.forge-toolkit/scripts/diff-scope.sh, impact.sh,
+            reuse-scan.sh, playbook.sh). Pick the playbook for the project's language with
+            playbook.sh stacks; skip playbooks if none matches.
+            Post the finished review (header, findings, verdict, Checks run) as the PR comment.
+          claude_args: |
+            --max-turns 30
+            --allowedTools Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(.forge-toolkit/scripts/diff-scope.sh:*),Bash(.forge-toolkit/scripts/impact.sh:*),Bash(.forge-toolkit/scripts/reuse-scan.sh:*),Bash(.forge-toolkit/scripts/playbook.sh:*),Bash(.forge-toolkit/scripts/xref.sh:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)

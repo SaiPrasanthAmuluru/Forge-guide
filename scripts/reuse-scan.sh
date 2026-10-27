@@ -162,15 +162,19 @@ while IFS="$TAB" read -r wl txt; do
   nm="$(printf '%s' "$txt" | grep -Eo '(func|var|let)[[:space:]]+[A-Za-z_][A-Za-z0-9_]*' | head -n1 | sed -E 's/^[a-z]+[[:space:]]+//')"
   [ -n "$nm" ] && [ "${#nm}" -ge 5 ] || continue
   # A single lowercase word (error, message, result) is a local name, not a helper: skip it.
-  case "$nm" in *[!a-z]*) ;; *) continue ;; esac
+  # (POSIX classes, not a-z: on some macOS locales a range like a-z also matches capitals.)
+  case "$nm" in *[[:upper:]]*|*[0-9_]*) ;; *) continue ;; esac
   printf '%s\t%s\n' "$nm" "$wl" >> "$TD/names"
 done < "$TD/added"
+if [ -n "${REUSE_DEBUG:-}" ]; then
+  { echo "-- debug: helper index rows"; cut -f1,2,4 "$TD/idx.body"; echo "-- debug: added names"; cat "$TD/names"; } >&2
+fi
 awk -F'\t' -v OFS='\t' '
   # camelCase words joined by "_" and fenced: "formatDate" -> "_format_date_". A name is "close"
   # to a helper when one is the other, or its words are a whole-word run inside the other.
   function words(s,   i,c,pc,out) { out="_"; pc=""
     for (i=1;i<=length(s);i++) { c=substr(s,i,1)
-      if (c ~ /[A-Z]/ && pc ~ /[a-z0-9]/) out=out "_"
+      if (c ~ /[[:upper:]]/ && pc ~ /[[:lower:][:digit:]]/) out=out "_"
       out=out tolower(c); pc=c }
     return out "_" }
   NR==FNR { n++; ty[n]=$1; nm[n]=$2; wd[n]=words($2); loc[n]=$4; next }

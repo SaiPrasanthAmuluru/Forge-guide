@@ -109,7 +109,7 @@ jobs:
           git add . && git commit -qm base
           printf 'func run() {\n    let message = "y"\n    func formatDateLong() {}\n}\n' > S/N.swift   # forge-allow
           git add . && git commit -qm head
-          out="$("$tk/scripts/reuse-scan.sh" HEAD~1 HEAD)"
+          out="$(REUSE_DEBUG=1 "$tk/scripts/reuse-scan.sh" HEAD~1 HEAD)"
           printf '%s\n' "$out"
           printf '%s\n' "$out" | grep -q "declares 'formatDateLong'"
           if printf '%s\n' "$out" | grep -q "declares 'message'"; then echo "local name flagged"; exit 1; fi

@@ -35,13 +35,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Checkout Forge-guide (the rules and scripts)
         uses: actions/checkout@v4
         with:
           repository: SaiPrasanthAmuluru/Forge-guide
-          ref: main            # pin to a tag or commit SHA so later changes cannot alter your reviews
+          ref: v0.1.0         # release tag, so later toolkit changes cannot alter reviews (main tracks latest)
           path: .forge-toolkit
+          persist-credentials: false
 
       - name: Review
         uses: anthropics/claude-code-action@v1

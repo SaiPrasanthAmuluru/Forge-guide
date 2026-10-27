@@ -35,3 +35,81 @@ jobs:
 
       - name: Playbook index works
         run: scripts/playbook.sh stacks
+
+      - name: Verdict check catches a softened verdict
+        run: |
+          set -e
+          t="$(mktemp -d)"
+          printf 'Reviewed: a..b | Pass: independent | Mode: strict | Coverage: all\n\n### [HIGH] Correctness - a:1\nx\n\nVerdict: Approve with comments\n' > "$t/soft.md"
+          printf 'Reviewed: a..b | Pass: independent | Mode: strict | Coverage: all\n\n### [HIGH] Correctness - a:1\nx\n\nVerdict: Request changes\n' > "$t/ok.md"
+          if scripts/verdict-check.sh "$t/soft.md"; then echo "softened verdict not caught"; exit 1; fi
+          scripts/verdict-check.sh "$t/ok.md"
+
+  macos:
+    # The scripts must work with the BSD tools that ship on macOS (sed, awk), not only GNU ones.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Impact scan prints its area summary
+        run: |
+          set -e
+          tk="$PWD"
+          cd "$(mktemp -d)"
+          git init -q .
+          git config user.email ci@example.com && git config user.name ci
+          mkdir -p Core/A Core/B
+          printf 'func fooHelper() {}\n' > Core/A/x.swift  # forge-allow: impact.sh scans Swift files
+          printf 'func bar() { fooHelper() }\n' > Core/B/y.swift  # forge-allow
+          git add . && git commit -qm init
+          out="$("$tk/scripts/impact.sh" --symbols fooHelper)"
+          printf '%s\n' "$out"
+          printf '%s\n' "$out" | grep -q 'area Core/B: 1 files'
+
+      - name: Review runner refuses output without the header
+        run: |
+          set -e
+          tk="$PWD"
+          cd "$(mktemp -d)"
+          git init -q .
+          git config user.email ci@example.com && git config user.name ci
+          echo a > f && git add . && git commit -qm 1 && echo b >> f && git commit -qam 2
+          FORGE_AGENT_CMD='printf "Reviewed: ok\n"' "$tk/scripts/ci-review.sh" --base HEAD~1 --head HEAD --pr 1 --host none
+          if FORGE_AGENT_CMD='printf "no header\n"' "$tk/scripts/ci-review.sh" --base HEAD~1 --head HEAD --pr 1 --host none; then
+            echo "runner posted output that had no header"; exit 1
+          fi
+
+      - name: Diff scope separates tests and suggests a mode
+        run: |
+          set -e
+          tk="$PWD"
+          cd "$(mktemp -d)"
+          git init -q .
+          git config user.email ci@example.com && git config user.name ci
+          mkdir -p src/latest Tests
+          echo a > src/latest/A.txt && echo a > Tests/ATests.txt && echo a > src/contest.txt
+          git add . && git commit -qm base
+          printf 'b\n' >> src/latest/A.txt && printf 'b\n' >> Tests/ATests.txt && printf 'b\n' >> src/contest.txt
+          git commit -qam head
+          out="$("$tk/scripts/diff-scope.sh" HEAD~1 HEAD)"
+          printf '%s\n' "$out"
+          printf '%s\n' "$out" | grep -q 'SKIM'
+          printf '%s\n' "$out" | grep -q 'suggested mode: fast'
+          printf '%s\n' "$out" | sed -n '/-- READ/,/-- SKIM/p' | grep -q 'src/latest/A.txt'
+
+      - name: Reuse scan matches whole camelCase words only
+        run: |
+          set -e
+          tk="$PWD"
+          cd "$(mktemp -d)"
+          git init -q .
+          git config user.email ci@example.com && git config user.name ci
+          mkdir S
+          printf 'extension String {\n    func formatDate() -> String { return self }\n}\n' > S/H.swift   # forge-allow: reuse-scan.sh indexes Swift
+          git add . && git commit -qm base
+          printf 'func run() {\n    let message = "y"\n    func formatDateLong() {}\n}\n' > S/N.swift   # forge-allow
+          git add . && git commit -qm head
+          out="$("$tk/scripts/reuse-scan.sh" HEAD~1 HEAD)"
+          printf '%s\n' "$out"
+          printf '%s\n' "$out" | grep -q "declares 'formatDateLong'"
+          if printf '%s\n' "$out" | grep -q "declares 'message'"; then echo "local name flagged"; exit 1; fi

@@ -5,9 +5,11 @@
 # Reads only `git diff --numstat` - never file contents - and tells the reviewer:
 #   * which files to READ, riskiest first (patterns in context/risk-paths.txt)
 #   * which files to SKIP by name only (lockfiles, vendored code, binary/asset files)
+#   * which test and mock files to SKIM (names and assertion lines, not line by line)
 #   * which are STRUCTURAL (project files: run a checker, don't read the diff)
 #   * which changes only REMOVE lines (check what was guarded + remaining references)
 #   * what falls outside an optional --budget, so partial coverage is disclosed, not hidden
+#   * a suggested review mode (fast | standard | strict) from the size and risk of the change
 #
 # Usage: scripts/diff-scope.sh <base> [head] [--budget <changed-lines>]
 #        scripts/diff-scope.sh --local [--budget N]   # uncommitted work: staged + unstaged + new files, vs HEAD
@@ -30,7 +32,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --budget) budget="${2:-0}"; shift 2 ;;
     --local) local_mode=1; shift ;;
-    -h|--help) sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) if [ -z "$base" ]; then base="$1"; elif [ "$head" = "HEAD" ]; then head="$1"; fi; shift ;;
   esac
 done
@@ -74,6 +76,17 @@ printf '%s\n' "$numstat" | awk -F'\t' -v risk_file="$RISK_FILE" -v budget="$budg
     if (q ~ /\.(generated|pb)\.swift$/ || q ~ /(^|\/)generated\//) return "generated code"
     return ""
   }
+  # Test, mock and fixture files: reviewed by test names and assertion lines, not line by line.
+  # Whole path parts only, so "latest/" or "contest.swift" never match.
+  function is_skim(p,   q, b) {
+    q = lower(p); b = p; sub(/.*\//, "", b)
+    if (q ~ /(^|\/)(tests?|mocks?|fixtures?|__tests__|specs?|testing|__mocks__)\//) return 1
+    if (p ~ /(^|\/)([^\/]*[a-z0-9])?(Tests?|Mocks?|Fixtures?|Specs?)\//) return 1
+    if (b ~ /(Tests?|Spec|Mock|Fake|Stub)\.[A-Za-z0-9]+$/ || b ~ /^(Mock|Fake|Stub)[A-Z]/) return 1
+    if (lower(b) ~ /^test_.*\.py$/ || lower(b) ~ /_tests?\.[a-z0-9]+$/ || lower(b) ~ /\.(test|spec)\.[a-z0-9]+$/) return 1
+    if (lower(b) ~ /^(mock|fake|stub)[-_.]/) return 1
+    return 0
+  }
   function is_structural(p,   q) {
     q = lower(p)
     return (q ~ /\.pbxproj$/ || q ~ /\.xcscheme$/ || q ~ /\.xcworkspacedata$/ || q ~ /\.xcuserstate$/)
@@ -93,6 +106,7 @@ printf '%s\n' "$numstat" | awk -F'\t' -v risk_file="$RISK_FILE" -v budget="$budg
     why = is_skip(path)
     if (why != "") { skipn++; skipl[skipn] = path "  (" why ")"; next }
     if (is_structural(path)) { strn++; strl[strn] = path "  (+" add " -" del ")"; next }
+    if (!is_high(path) && is_skim(path)) { skimn++; skiml[skimn] = path "  (+" add " -" del ")"; skimsum += add + del; next }
     n++
     P[n] = path; A[n] = add + 0; D[n] = del + 0
     H[n] = is_high(path)
@@ -130,6 +144,11 @@ printf '%s\n' "$numstat" | awk -F'\t' -v risk_file="$RISK_FILE" -v budget="$budg
       print "-- NOT REACHED (over --budget; name these in the review summary) --"
       for (i = 1; i <= over; i++) print overl[i]
     }
+    if (skimn > 0) {
+      print ""
+      printf "-- SKIM (%d changed lines in tests / mocks / fixtures: check test names and assertion lines; still read any hunk that removes or changes an assertion line) --\n", skimsum
+      for (i = 1; i <= skimn; i++) print skiml[i]
+    }
     if (strn > 0) {
       print ""
       print "-- STRUCTURAL (run a checker, do not read the diff; see IOS-029 for project files) --"
@@ -142,5 +161,13 @@ printf '%s\n' "$numstat" | awk -F'\t' -v risk_file="$RISK_FILE" -v budget="$budg
     }
     print ""
     printf "READ total: %d changed lines (~%d tokens, rough guess).\n", covered, covered * 14
+    # Suggested mode: strict when any HIGH-risk file changed, fast when the change is small and
+    # has no HIGH or STRUCTURAL file, standard otherwise. Only READ files are counted.
+    anyhigh = 0; srcl = 0
+    for (i = 1; i <= n; i++) { if (H[i]) anyhigh = 1; srcl += A[i] + D[i] }
+    if (anyhigh) { sm = "strict"; why = "a HIGH-risk file changed" }
+    else if (srcl < 300 && strn == 0) { sm = "fast"; why = srcl " source lines to read, no HIGH-risk or STRUCTURAL files" }
+    else { sm = "standard"; why = (strn > 0 ? "STRUCTURAL files changed" : srcl " source lines to read") }
+    printf "suggested mode: %s (%s). The Mode: line in AGENTS.md is the upper limit; use the lower of the two.\n", sm, why
   }
 '

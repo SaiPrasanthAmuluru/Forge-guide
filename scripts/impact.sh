@@ -16,11 +16,12 @@
 # It is a text search (word-boundary), not a compiler: a language-server or IDE reference tool
 # is exact, so prefer it if the session has one and say which method was used in "Checks run".
 # Swift gets enclosing-declaration detection; other languages get declaration lines only.
+# In the diff modes it also lists functions whose last caller the change removed (dead code).
 # Environment: IMPACT_MAX_SYMBOLS (default 25), IMPACT_MAX_FILES (files listed per symbol, 6).
 # Bash 3.2 / BSD safe. Read-only.
 set -u
 MAXSYM="${IMPACT_MAX_SYMBOLS:-25}"; MAXF="${IMPACT_MAX_FILES:-6}"
-[ "$#" -ge 1 ] || { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+[ "$#" -ge 1 ] || { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Run this inside the project's git checkout." >&2; exit 1; }
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT" || exit 1
 TD="$(mktemp -d)"; trap 'rm -rf "$TD"' EXIT
@@ -31,6 +32,7 @@ STOP=' body init deinit viewDidLoad viewWillAppear viewDidAppear viewWillDisappe
 
 : > "$TD/syms"        # lines: name<TAB>kind (changed|removed|planned)
 : > "$TD/changedfiles"
+: > "$TD/called"        # names called on removed lines (for the orphan check)
 
 if [ "$1" = "--symbols" ]; then
   shift; [ "$#" -ge 1 ] || { echo "usage: $0 --symbols <name> [name ...]" >&2; exit 1; }
@@ -57,6 +59,8 @@ else
     # removed declarations: their consumers will break
     grep -E '^-[^-]' "$TD/d" | grep -Eo "$DECL_RE" | sed -E 's/.*(func|var|let|class|struct|enum|protocol|actor|typealias|def|fn|function|interface|trait|val|fun)[[:space:]]+//' \
       | while IFS= read -r n; do printf '%s\tremoved\n' "$n"; done >> "$TD/syms"
+    # names called on removed lines: if nothing calls them any more at head they are now dead code
+    grep -E '^-[^-]' "$TD/d" | grep -Eo '[A-Za-z_][A-Za-z0-9_]*\(' | sed 's/($//' >> "$TD/called"
     # enum cases removed or renamed (exhaustive switches elsewhere)
     grep -E '^-[[:space:]]*case[[:space:]]+[A-Za-z_]' "$TD/d" | grep -Ev ':[[:space:]]*(//.*)?$' | sed -E 's/^-[[:space:]]*case[[:space:]]+([A-Za-z_][A-Za-z0-9_]*).*/\1/' \
       | while IFS= read -r n; do printf '%s\tremoved\n' "$n"; done >> "$TD/syms"
@@ -127,11 +131,38 @@ while IFS="$(printf '\t')" read -r n k; do
   printf '%s\t%s\n' "$n" "$k" >> "$TD/list"
 done < "$TD/syms2"
 
+# Orphans: a function that was called on a removed line and has no caller left at head. Only the
+# diff modes can know this. Declared-in-this-repo names only (library calls are ignored).
+orphans() {
+if [ "$MODE" != "planned symbols" ] && [ -s "$TD/called" ]; then
+  : > "$TD/orph"; seen=0
+  sort -u "$TD/called" | while IFS= read -r c; do
+    [ "${#c}" -ge 4 ] || continue
+    case "$STOP" in *" $c "*) continue ;; esac
+    [ "$seen" -lt "$MAXSYM" ] || break
+    decl="$(git grep -nIE "(func|def|fn|function|fun)[[:space:]]+$c([^A-Za-z0-9_]|$)" 2>/dev/null | grep -Ev "$VENDOR" | grep -Ev "$TESTP" | head -n 1 | cut -d: -f1,2)"
+    [ -n "$decl" ] || continue
+    git grep -nIw -- "$c" 2>/dev/null | grep -Ev "$VENDOR" \
+      | grep -Ev "(func|def|fn|function|fun)[[:space:]]+$c([^A-Za-z0-9_]|$)" > "$TD/ouses" || true
+    if [ ! -s "$TD/ouses" ]; then printf '%s\t%s\tnone\n' "$c" "$decl" >> "$TD/orph"; seen=$((seen+1))
+    elif ! cut -d: -f1 "$TD/ouses" | grep -Eiv "$TESTP" | grep -q .; then printf '%s\t%s\ttests\n' "$c" "$decl" >> "$TD/orph"; seen=$((seen+1)); fi
+  done
+  if [ -s "$TD/orph" ]; then
+    echo "-- orphaned: called on a removed line, with no production caller left at head --"
+    while IFS="$(printf '\t')" read -r c d w; do
+      if [ "$w" = tests ]; then echo "     $c (declared $d)  <- only tests call it now"
+      else echo "     $c (declared $d)  <- no callers left at head: dead code, remove it or say why it stays"; fi
+    done < "$TD/orph"
+  fi
+fi
+}
+
 echo "== impact: $MODE (text search, word-boundary) =="
 total="$(wc -l < "$TD/list" | tr -d ' ')"
 if [ "$total" -eq 0 ]; then
   echo "No searchable declarations found in the change. If it changes behavior inside a closure, a"
   echo "string/key or a generated file, name the affected symbols and re-run with --symbols."
+  orphans
   [ -s "$TD/skipped" ] && echo "skipped: $(cat "$TD/skipped")"
   exit 0
 fi
@@ -156,14 +187,15 @@ while IFS="$(printf '\t')" read -r n k; do
   if [ "$k" = removed ] && [ "$((npo+nto))" -gt 0 ]; then flag="  <- REMOVED but still referenced"; fi
   echo "-- $n [$k]: production $np files ($npo outside the change), tests $nt files ($nto outside)$flag"
   if [ "$npo" -gt 0 ]; then
-    sed -E 's#^([^/]+/[^/]+)/.*#\1#; t; s#^[^/]*$#(root)#' "$TD/pout" | sort | uniq -c | sort -rn | head -n 6 | sed -E 's/^ *([0-9]+) (.*)$/     area \2: \1 files/'
+    sed -E -e 's#^([^/]+/[^/]+)/.*#\1#' -e t -e 's#^[^/]*$#(root)#' "$TD/pout" | sort | uniq -c | sort -rn | head -n 6 | sed -E 's/^ *([0-9]+) (.*)$/     area \2: \1 files/'
     head -n "$MAXF" "$TD/pout" | sed 's/^/     /'
     [ "$npo" -gt "$MAXF" ] && echo "     ... $((npo-MAXF)) more files"
-    sed -E 's#^([^/]+/[^/]+)/.*#\1#; t; s#^[^/]*$#(root)#' "$TD/pout" >> "$TD/areas_all"
+    sed -E -e 's#^([^/]+/[^/]+)/.*#\1#' -e t -e 's#^[^/]*$#(root)#' "$TD/pout" >> "$TD/areas_all"
   fi
   if [ "$nto" -gt 0 ] && [ "$k" != planned ]; then echo "     tests outside the change asserting this: $nto files (sweep them: IOS-041)"; fi
 done < "$TD/list"
 
+orphans
 echo "== summary: $shown symbols, $flagged with production consumers in files the change did not touch =="
 if [ -s "$TD/areas_all" ]; then
   echo "areas to confirm (flow still correct, adapted, or out of scope by decision):"

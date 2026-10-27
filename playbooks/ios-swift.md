@@ -627,3 +627,31 @@ and reported a Swift toolchain mismatch. The toolchain was fine; the cached expl
 precompiled modules were stale.
 **Action:** Before debugging the toolchain, delete the project's `SwiftExplicitPrecompiledModules`
 folder inside DerivedData (or clean DerivedData) and rebuild.
+
+### IOS-050 - `@unknown default` turns a missing case into a warning, not an error [MEDIUM]
+
+**Seen:** A `switch` over an enum from the app's own module ended in `@unknown default`. When a
+new case was added later, the build still passed and the new case fell through to the default
+branch without anyone noticing. `@unknown default` makes a missing known case a warning instead
+of an error, and on an enum without library evolution it can also warn that the default will
+never run.
+**Action:** Use `@unknown default` only for enums from the SDK or a library that can grow. For
+enums in your own modules, write an exhaustive `switch` with no default, so adding a case breaks
+the build at every switch that needs a decision.
+
+### IOS-051 - A tone drawn as text, border and background at once must be readable in every combination [MEDIUM]
+
+**Seen:** A status tone was applied to a label's text colour, border and fill together. One tone,
+and the fallback tone used when the value was unknown, were nearly unreadable in dark mode
+because the three colours were close to each other.
+**Action:** For any style that colours text, border and background from one value, check every
+tone, including the fallback, in light and dark, at every place it is drawn. Look at the
+fallback tone first: it is the one nobody designs for.
+
+### IOS-052 - After moving a type out of a file, remove the imports only that type needed [LOW]
+
+**Seen:** A type was moved into its own file. The old file kept the imports the moved type had
+needed, so it kept depending on modules it no longer used. Swift does not warn about unused
+imports, so nothing flagged it.
+**Action:** When a type moves, list the imports it used and remove each from the old file if no
+remaining code there needs it. Check the new file imports what it needs and nothing more.

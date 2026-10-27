@@ -46,8 +46,10 @@ finding's severity for the gate.
 
 ## Check depth mode
 
-Set by the person with the `Mode:` line at the top of `AGENTS.md` (or stated in the
-task). Default **strict**. A mode changes only how much is searched and re-checked - never
+The `Mode:` line at the top of `AGENTS.md` (or the task) is the upper limit; default
+**strict**. `scripts/diff-scope.sh` also prints a suggested mode from the size and risk of a
+change, and the effective mode is the lower of the two (fast < standard < strict). The
+review header names the mode used. A mode changes only how much is searched and re-checked - never
 the severity definitions, the gate table, or the verdict arithmetic. Every narrowing a mode
 causes is disclosed in the output in one line (e.g. "fast mode: independent re-review not
 run").
@@ -111,6 +113,9 @@ ambiguity so the next pass is cheaper.
   else `scripts/impact.sh <base> <head>` (finds the changed declarations itself and lists consumers in untouched files) or `scripts/xref.sh <symbol> [--also <other spelling>]` (text search grouped into
   definitions / production / tests), else grep. Say which in `Checks run`. If the budget
   doesn't allow tracing every symbol, name the symbol and mark it Confidence: Low.
+- **Addressed replies match the code.** A resolved review thread whose reply claims a change
+  ("added X", "now uses Y") is checked against the head commit; a claimed fix that is not in
+  the code is a MEDIUM finding. No thread access: say "not run - no thread access".
 - **Sibling-instance.** After finding or fixing one instance of a bug shape - in review,
   investigation or a fix - run the same check on its siblings in the same file/domain, or
   say which weren't checked and why. "I checked the representative one" is not "I checked

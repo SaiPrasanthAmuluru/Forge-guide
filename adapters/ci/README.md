@@ -23,6 +23,20 @@ else (no edits, no pushes). Set that restriction with your agent's own permissio
 Example values for `FORGE_AGENT_CMD` (an agent in non-interactive print mode with read-only tools)
 are in your agent's documentation; keep the credential in a secret variable, never in the YAML.
 
+## What the runner does for safety
+
+- The agent runs with the host tokens (`GH_TOKEN`, `GITHUB_TOKEN`, `SYSTEM_ACCESSTOKEN`,
+  `GITLAB_TOKEN`, `BITBUCKET_TOKEN`) removed from its environment, because it reads untrusted PR
+  content. Only the posting step uses them.
+- It posts only if the first non-blank line of the output starts with `Reviewed: `.
+- Templates clone Forge-guide at the release tag `v0.1.0`. Create that tag in Forge-guide before
+  using them (`git tag v0.1.0 && git push origin v0.1.0`), or change it to `main` to track latest.
+- The comment carries a hidden marker. On the next push the runner finds its earlier comment by
+  that marker and edits it in place; if the lookup or the edit fails it posts a new comment
+  instead. `FORGE_REVIEW_MODE=new` always posts a new one. The lookup reads the first 100
+  comments and is checked only against a mock server, so confirm it on your host (Azure DevOps
+  first: it also needs "Contribute to pull requests" to edit).
+
 ## Test before trusting
 
 The runner's request building, output refusal and comment posting were tested against a local mock

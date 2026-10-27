@@ -23,6 +23,7 @@
 #   gitlab    GITLAB_TOKEN (a project access token), CI_API_V4_URL, CI_PROJECT_ID
 #   bitbucket BITBUCKET_TOKEN, BITBUCKET_WORKSPACE, BITBUCKET_REPO_SLUG
 # FORGE_API_BASE overrides the host API base URL (used for testing against a mock server).
+# The comment is edited in place on later pushes (hidden marker); FORGE_REVIEW_MODE=new posts anew.
 # Requires bash, git, curl, awk. Review text is capped at 60000 characters.
 set -eu
 here="$(cd "$(dirname "$0")/.." && pwd)"
@@ -64,12 +65,31 @@ REQ
 if [ "$dry" = 1 ]; then echo "== request (dry run, host=$host) =="; cat "$tmp/request.md"; exit 0; fi
 [ -n "${FORGE_AGENT_CMD:-}" ] || { echo "set FORGE_AGENT_CMD to your agent command (reads stdin, prints the review)" >&2; exit 2; }
 
-sh -c "$FORGE_AGENT_CMD" < "$tmp/request.md" > "$tmp/review.md" || { echo "agent command failed" >&2; exit 1; }
+# The agent reads untrusted PR content, so it runs without the host tokens used to post below.
+env -u GH_TOKEN -u GITHUB_TOKEN -u SYSTEM_ACCESSTOKEN -u GITLAB_TOKEN -u BITBUCKET_TOKEN \
+  sh -c "$FORGE_AGENT_CMD" < "$tmp/request.md" > "$tmp/review.md" || { echo "agent command failed" >&2; exit 1; }
 tr -d '\000-\010\013\014\016-\037' < "$tmp/review.md" > "$tmp/clean.md"
-grep -q 'Reviewed:' "$tmp/clean.md" || { echo "agent output has no 'Reviewed:' header; not posting. Output was:" >&2; head -c 2000 "$tmp/clean.md" >&2; exit 1; }
+awk 'NF{print; exit}' "$tmp/clean.md" | grep -q '^Reviewed: ' || { echo "agent output does not start with a 'Reviewed:' header line; not posting. Output was:" >&2; head -c 2000 "$tmp/clean.md" >&2; exit 1; }
+# The verdict must follow from the findings; if it does not, say so in the comment itself.
+vc="$("$here/scripts/verdict-check.sh" "$tmp/clean.md" 2>&1)" && vrc=0 || vrc=$?
+if [ "$vrc" = 1 ]; then
+  printf '\n\n> **Verdict check failed:** %s\n> By the gate arithmetic this review should read "Request changes". Treat the stated verdict as unreliable.\n' "$(printf '%s' "$vc" | grep MISMATCH | head -n 1)" >> "$tmp/clean.md"
+elif [ "$vrc" = 2 ]; then
+  printf '\n\n> **Verdict check:** no verdict line was found in this review.\n' >> "$tmp/clean.md"
+fi
 if [ "$(wc -c < "$tmp/clean.md")" -gt 60000 ]; then
   head -c 60000 "$tmp/clean.md" > "$tmp/cut.md"; printf '\n\n_(review truncated at 60000 characters)_\n' >> "$tmp/cut.md"; mv "$tmp/cut.md" "$tmp/clean.md"
 fi
+
+# The posted body starts with a hidden marker. On the next push the runner finds its earlier
+# comment by that marker and edits it in place; if the lookup or the edit fails for any reason
+# it posts a new comment instead. FORGE_REVIEW_MODE=new always posts a new one.
+MARK='<!-- forge-review -->'
+printf '%s\n\n' "$MARK" | cat - "$tmp/clean.md" > "$tmp/post.md"
+mode_post="${FORGE_REVIEW_MODE:-update}"
+# byte offset of the marker in a JSON listing, and the last id-like match before that offset
+mark_pos() { grep -b -o 'forge-review -->' "$1" 2>/dev/null | head -n 1 | cut -d: -f1; }
+id_before() { head -c "$2" "$1" | grep -Eo "$3" | tail -n 1 | grep -Eo '[0-9]+$' || true; }
 
 # JSON-escape the review into one string (no jq or python needed)
 json_body() {
@@ -78,29 +98,55 @@ json_body() {
 [ -n "$pr" ] || [ "$host" = none ] || { echo "need --pr to post a comment" >&2; exit 2; }
 
 case "$host" in
-  none) cat "$tmp/clean.md" ;;
+  none) cat "$tmp/clean.md"; exit 0 ;;
   github)
     api="${FORGE_API_BASE:-https://api.github.com}"; tok="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
-    printf '{"body":"%s"}' "$(json_body "$tmp/clean.md")" > "$tmp/body.json"
-    curl -fsS -X POST -H "Authorization: Bearer $tok" -H "Accept: application/vnd.github+json" \
-      -H "Content-Type: application/json" --data-binary @"$tmp/body.json" \
-      "$api/repos/${GITHUB_REPOSITORY}/issues/$pr/comments" >/dev/null ;;
+    repo="${GITHUB_REPOSITORY}"
+    printf '{"body":"%s"}' "$(json_body "$tmp/post.md")" > "$tmp/body.json"
+    gh_curl() { curl -fsS -H "Authorization: Bearer $tok" -H "Accept: application/vnd.github+json" -H "Content-Type: application/json" "$@"; }
+    cid=""
+    if [ "$mode_post" = update ] && gh_curl "$api/repos/$repo/issues/$pr/comments?per_page=100" > "$tmp/list.json" 2>/dev/null; then
+      pos="$(mark_pos "$tmp/list.json")"; [ -z "$pos" ] || cid="$(id_before "$tmp/list.json" "$pos" 'issues/comments/[0-9]+')"
+    fi
+    if [ -n "$cid" ] && gh_curl -X PATCH --data-binary @"$tmp/body.json" "$api/repos/$repo/issues/comments/$cid" >/dev/null 2>&1; then did=updated
+    else gh_curl -X POST --data-binary @"$tmp/body.json" "$api/repos/$repo/issues/$pr/comments" >/dev/null; did=created; fi ;;
   azure)
     api="${FORGE_API_BASE:-${SYSTEM_COLLECTIONURI%/}}"
-    printf '{"comments":[{"parentCommentId":0,"content":"%s","commentType":1}],"status":1}' "$(json_body "$tmp/clean.md")" > "$tmp/body.json"
-    curl -fsS -X POST -H "Authorization: Bearer ${SYSTEM_ACCESSTOKEN:-}" -H "Content-Type: application/json" \
-      --data-binary @"$tmp/body.json" \
-      "$api/${SYSTEM_TEAMPROJECT}/_apis/git/repositories/${BUILD_REPOSITORY_ID}/pullRequests/$pr/threads?api-version=7.1" >/dev/null ;;
+    az_base="$api/${SYSTEM_TEAMPROJECT}/_apis/git/repositories/${BUILD_REPOSITORY_ID}/pullRequests/$pr/threads"
+    az_curl() { curl -fsS -H "Authorization: Bearer ${SYSTEM_ACCESSTOKEN:-}" -H "Content-Type: application/json" "$@"; }
+    tid=""
+    if [ "$mode_post" = update ] && az_curl "$az_base?api-version=7.1" > "$tmp/list.json" 2>/dev/null; then
+      pos="$(mark_pos "$tmp/list.json")"
+      if [ -n "$pos" ]; then
+        cpos="$(head -c "$pos" "$tmp/list.json" | grep -b -o '"comments": *\[' | tail -n 1 | cut -d: -f1)"
+        [ -z "$cpos" ] || tid="$(id_before "$tmp/list.json" "$cpos" '"id": *[0-9]+')"
+      fi
+    fi
+    printf '{"content":"%s"}' "$(json_body "$tmp/post.md")" > "$tmp/upd.json"
+    printf '{"comments":[{"parentCommentId":0,"content":"%s","commentType":1}],"status":1}' "$(json_body "$tmp/post.md")" > "$tmp/body.json"
+    if [ -n "$tid" ] && az_curl -X PATCH --data-binary @"$tmp/upd.json" "$az_base/$tid/comments/1?api-version=7.1" >/dev/null 2>&1; then did=updated
+    else az_curl -X POST --data-binary @"$tmp/body.json" "$az_base?api-version=7.1" >/dev/null; did=created; fi ;;
   gitlab)
     api="${FORGE_API_BASE:-${CI_API_V4_URL}}"
-    curl -fsS -X POST -H "PRIVATE-TOKEN: ${GITLAB_TOKEN:-}" --data-urlencode "body@$tmp/clean.md" \
-      "$api/projects/${CI_PROJECT_ID}/merge_requests/$pr/notes" >/dev/null ;;
+    gl_base="$api/projects/${CI_PROJECT_ID}/merge_requests/$pr/notes"
+    gl_curl() { curl -fsS -H "PRIVATE-TOKEN: ${GITLAB_TOKEN:-}" "$@"; }
+    nid=""
+    if [ "$mode_post" = update ] && gl_curl "$gl_base?per_page=100" > "$tmp/list.json" 2>/dev/null; then
+      pos="$(mark_pos "$tmp/list.json")"; [ -z "$pos" ] || nid="$(id_before "$tmp/list.json" "$pos" '"id": *[0-9]+')"
+    fi
+    if [ -n "$nid" ] && gl_curl -X PUT --data-urlencode "body@$tmp/post.md" "$gl_base/$nid" >/dev/null 2>&1; then did=updated
+    else gl_curl -X POST --data-urlencode "body@$tmp/post.md" "$gl_base" >/dev/null; did=created; fi ;;
   bitbucket)
     api="${FORGE_API_BASE:-https://api.bitbucket.org/2.0}"
-    printf '{"content":{"raw":"%s"}}' "$(json_body "$tmp/clean.md")" > "$tmp/body.json"
-    curl -fsS -X POST -H "Authorization: Bearer ${BITBUCKET_TOKEN:-}" -H "Content-Type: application/json" \
-      --data-binary @"$tmp/body.json" \
-      "$api/repositories/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/pullrequests/$pr/comments" >/dev/null ;;
+    bb_base="$api/repositories/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/pullrequests/$pr/comments"
+    bb_curl() { curl -fsS -H "Authorization: Bearer ${BITBUCKET_TOKEN:-}" -H "Content-Type: application/json" "$@"; }
+    printf '{"content":{"raw":"%s"}}' "$(json_body "$tmp/post.md")" > "$tmp/body.json"
+    cid=""
+    if [ "$mode_post" = update ] && bb_curl "$bb_base?pagelen=100" > "$tmp/list.json" 2>/dev/null; then
+      pos="$(mark_pos "$tmp/list.json")"; [ -z "$pos" ] || cid="$(id_before "$tmp/list.json" "$pos" '"id": *[0-9]+')"
+    fi
+    if [ -n "$cid" ] && bb_curl -X PUT --data-binary @"$tmp/body.json" "$bb_base/$cid" >/dev/null 2>&1; then did=updated
+    else bb_curl -X POST --data-binary @"$tmp/body.json" "$bb_base" >/dev/null; did=created; fi ;;
   *) echo "unknown host: $host" >&2; exit 2 ;;
 esac
-[ "$host" = none ] || echo "review posted ($host, PR $pr)" >&2
+echo "review $did ($host, PR $pr)" >&2

@@ -160,14 +160,24 @@ awk -F'\t' '$1=="S"{print $2 "\t" $3}' "$TD/windows" > "$TD/added"
 : > "$TD/names"
 while IFS="$TAB" read -r wl txt; do
   nm="$(printf '%s' "$txt" | grep -Eo '(func|var|let)[[:space:]]+[A-Za-z_][A-Za-z0-9_]*' | head -n1 | sed -E 's/^[a-z]+[[:space:]]+//')"
-  [ -n "$nm" ] && [ "${#nm}" -ge 5 ] && printf '%s\t%s\n' "$nm" "$wl" >> "$TD/names"
+  [ -n "$nm" ] && [ "${#nm}" -ge 5 ] || continue
+  # A single lowercase word (error, message, result) is a local name, not a helper: skip it.
+  case "$nm" in *[!a-z]*) ;; *) continue ;; esac
+  printf '%s\t%s\n' "$nm" "$wl" >> "$TD/names"
 done < "$TD/added"
 awk -F'\t' -v OFS='\t' '
-  NR==FNR { n++; ty[n]=$1; nm[n]=$2; lo[n]=tolower($2); loc[n]=$4; next }
-  { a=tolower($1); if (length(a)<5) next
-    for (i=1;i<=n;i++) { h=lo[i]; if (length(h)<5) continue
+  # camelCase words joined by "_" and fenced: "formatDate" -> "_format_date_". A name is "close"
+  # to a helper when one is the other, or its words are a whole-word run inside the other.
+  function words(s,   i,c,pc,out) { out="_"; pc=""
+    for (i=1;i<=length(s);i++) { c=substr(s,i,1)
+      if (c ~ /[A-Z]/ && pc ~ /[a-z0-9]/) out=out "_"
+      out=out tolower(c); pc=c }
+    return out "_" }
+  NR==FNR { n++; ty[n]=$1; nm[n]=$2; wd[n]=words($2); loc[n]=$4; next }
+  { aw=words($1); if (length($1)<5) next
+    for (i=1;i<=n;i++) { if (length(nm[i])<5) continue
       split(loc[i],lp,":"); split($2,wp,":"); if (lp[1]==wp[1] && wp[2]+0>=lp[2]-3 && wp[2]+0<=lp[2]+3) continue
-      if (a==h || index(a,h)>0 || index(h,a)>0) print "C", ty[i] "." nm[i], loc[i], $2, $1, "" } }
+      if (aw==wd[i] || index(aw,wd[i])>0 || index(wd[i],aw)>0) print "C", ty[i] "." nm[i], loc[i], $2, $1, "" } }
 ' "$TD/idx.body" "$TD/names" >> "$TD/match" 2>/dev/null || true
 
 sort -u "$TD/match" | awk -F'\t' '{ split($4,w,":"); k=$1 "|" $2 "|" w[1]; if (!(k in s)) { s[k]=1; print } }' > "$TD/m2"

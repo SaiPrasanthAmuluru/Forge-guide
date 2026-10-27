@@ -205,6 +205,7 @@ Forge-guide/
 │   ├── report-metrics.sh     # reads the three ledgers: tokens by type/phase, escapes, precision, playbook hits
 │   ├── playbook.sh           # index / show <ID> / find <kw> - read playbook entries, not the file
 │   ├── diff-scope.sh         # review pre-filter: read order, skips, budget - from numstat only
+│   ├── verdict-check.sh      # fails when a review verdict is softer than its findings (gate arithmetic)
 │   ├── drift-check.sh
 │   ├── verify-spec.sh
 │   ├── check-context-freshness.sh  # cheap staleness check for base-snapshot.md
@@ -213,7 +214,7 @@ Forge-guide/
     ├── generic/prompts.md    # paste-ready prompts: review a PR, review local changes, generate, report
     ├── ci/                   # PR review in CI on GitHub, Azure DevOps, GitLab, Bitbucket (any agent)
     ├── github-actions/       # alternative GitHub template that uses a vendor action
-    └── claude-code/          # reviewer subagent + PR-blocking hook for Claude Code
+    └── claude-code/          # reviewer subagent, PR-blocking hook and skill wrappers for Claude Code
 ```
 
 ## Context before code: map, then flow, then questions

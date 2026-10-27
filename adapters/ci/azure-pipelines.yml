@@ -20,8 +20,8 @@ steps:
     persistCredentials: false
 
   - script: |
-      git clone --depth 1 --branch main https://github.com/SaiPrasanthAmuluru/Forge-guide.git "$(Agent.TempDirectory)/forge"
-      # pin: add  --branch <tag>  instead of main so later changes cannot alter your reviews
+      git clone --depth 1 --branch v0.1.0 https://github.com/SaiPrasanthAmuluru/Forge-guide.git "$(Agent.TempDirectory)/forge"
+      # pinned to a release tag so later toolkit changes cannot alter your reviews (use main to track latest)
       if [ -n "$FORGE_AGENT_INSTALL" ]; then sh -c "$FORGE_AGENT_INSTALL"; fi
     displayName: Fetch Forge-guide and install the agent
     env:

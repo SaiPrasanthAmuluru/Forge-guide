@@ -79,7 +79,8 @@ one section of `memory/quality-gate-detail.md` when applying a check in depth;
 
 ## Token economy
 
-No exploratory tool calls - every call has a purpose; get paths and line numbers back, not
+Do not list the toolkit folder or read its files up front; follow the load order above and open
+a file only when a step names it. No exploratory tool calls - every call has a purpose; get paths and line numbers back, not
 file contents; open only the range needed. Don't re-read unchanged content already in
 context. Filter large output by keyword or a tool's structured summary, never blind
 `tail`/`head`. Keep this file, the constitution and the gate unedited within a session
@@ -94,7 +95,9 @@ Use `review/review-prompt.md` for a PR, a commit range, unpushed commits or unco
 changes (`scripts/local-changes.sh` shows what exists; `diff-scope.sh --local` triages it; nothing
 is staged or changed): one pass with a token-aware flow (`scripts/diff-scope.sh`
 triage → diff-only candidate pass → targeted confirmation), same gate and playbooks as
-generation. Re-reviews of an updated PR are incremental (commits since the last reviewed
+generation. `diff-scope.sh` also prints a suggested mode (small change with no high-risk file
+-> fast); the `Mode:` line above is the upper limit and the review uses the lower of the two.
+Re-reviews of an updated PR are incremental (commits since the last reviewed
 head, plus re-confirming open findings). Where subagents exist, run the review in a
 read-only reviewer with its own context (a fresh session, or a packaged subagent from `adapters/`). If "review"
 is ambiguous about which rubric, ask once before starting.

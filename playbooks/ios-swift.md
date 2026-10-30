@@ -655,3 +655,109 @@ needed, so it kept depending on modules it no longer used. Swift does not warn a
 imports, so nothing flagged it.
 **Action:** When a type moves, list the imports it used and remove each from the old file if no
 remaining code there needs it. Check the new file imports what it needs and nothing more.
+
+### IOS-053 - HTML-to-attributed-string import inside a SwiftUI `body` can abort the app [HIGH]
+
+**Seen:** A view converted an HTML string to rich text with the system HTML importer from inside
+`body`. That importer is built on the web engine and spins the main run loop while it works, so
+the view graph was re-entered mid-update and the app aborted in the attribute graph.
+**Action:** Never call the system HTML importer from a view's `body` or any code `body` runs.
+Convert once, outside `body` (when the model loads), or use a converter that does not use the web
+engine. Check every call site, not just the one that crashed.
+
+### IOS-054 - List every producer of an input before narrowing the code that parses it [MEDIUM]
+
+**Seen:** A text converter was written for output from one rich-text editor. The same field was
+also fed by archived email templates containing tables, a head section, comments and link tags.
+A reviewer found four behaviours the converter got wrong; the author had assumed one source.
+**Action:** Before writing or narrowing a parser, name every place the field is written from
+(editors, imports, backend templates, migrations) and test one sample from each. Put the
+assumption about the input in the spec's "Decisions & why", with the sources checked.
+
+### IOS-055 - A promise fulfilled off the main actor must not reach main-actor code directly [HIGH]
+
+**Seen:** A Combine `Future` was fulfilled from a background pool and its result flowed straight
+into `@MainActor` code. The runtime's queue assertion failed and the app crashed on one of the
+failure paths, which no test covered.
+**Action:** Deliver publisher results on the main actor explicitly before they reach UI code.
+Test the success path and every failure path with the delivery thread asserted, not just the
+success path.
+
+### IOS-056 - Changing a shared enum's raw values or order must name every client and migrate saved data [HIGH]
+
+**Seen:** The backend and the web client reversed the order of a rating enum together. A shared
+mobile module was missed and kept the old order, so ratings saved from mobile came out inverted.
+Data saved before the change is also inverted unless a migration converts it.
+**Action:** A contract change to enum raw values or ordering lists every client that reads or
+writes it (web, each mobile app, shared modules) and states what happens to data already saved.
+Prefer sending explicit names over ordinals.
+
+### IOS-057 - Crash reports from framework targets merge into one issue when their symbol files are missing [LOW]
+
+**Seen:** Two unrelated crashes (a networking one and a migration one) landed in the same
+crash-reporting issue because the frameworks' debug symbols were not uploaded, so frames showed
+the same unsymbolicated memory-copy function.
+**Action:** Upload symbol files for every framework target, not only the app target. When a
+crash issue's frames look generic, check symbolication before concluding two reports share a
+cause.
+
+### IOS-058 - Inserting at a fixed index into an array another path can empty traps [HIGH]
+
+**Seen:** A screen built its card list by inserting a card at a fixed position. A settings call
+elsewhere cleared the same array, so a later insert at position 1 ran against an empty array and
+trapped with index out of range. The trigger was timing, so it was hard to reproduce.
+**Action:** Do not insert at fixed positions into a list that other code can reset. Rebuild the
+derived list in a fixed order from current state, or guard with the array's count. Search for
+every writer of the array before deciding it is always populated.
+
+### IOS-059 - A claim written into a fix is a check to run, not a fact [MEDIUM]
+
+**Seen:** A fix added defensive layout code on the stated reason that a configuration callback
+"can arrive more than once". The callback had one caller, called once, so the change did nothing
+and QE notes were written for a behaviour that could not happen.
+**Action:** For each defensive change, find every caller that would make its premise true. If
+there is none, drop the change. Name the evidence the fix addresses (crash frame, breadcrumb,
+log line) and check the change sits on that path before describing it as a fix.
+
+### IOS-060 - A debugger exception breakpoint pauses on caught exceptions and looks like a crash [LOW]
+
+**Seen:** A reported crash in a screen backed by a cross-platform module had no crash report. The
+app had stopped because an all-exceptions breakpoint paused on an exception the module throws
+and catches normally, and the app was then reinstalled by the IDE.
+**Action:** Before treating a stop as a crash, check for a crash report, or rerun without the
+debugger attached or with exception breakpoints off. Ask for the backtrace and the console lines.
+
+### IOS-061 - `Identifiable` keyed on a server id that can be zero gives every row the same identity [MEDIUM]
+
+**Seen:** A list model used the server's `id` for `Identifiable`. A new payload shape sends `0`
+for every item, so all rows shared one identity and the list misbehaved; analytics also lost a
+field that had come from the old shape.
+**Action:** When a payload shape can change, derive a stable id in the mapping layer (for
+example a prefix plus the underlying id) instead of using a server value that may be zero or
+repeated. Test a list with two items that share the raw id.
+
+### IOS-062 - Resetting a navigation flag right after the push allows a double push [MEDIUM]
+
+**Seen:** A button set a "navigating" flag, pushed a screen, and cleared the flag in the same
+call. A fast second tap ran before the first screen was on the stack, so the destination was
+pushed twice.
+**Action:** Clear the guard when the destination actually appears or is dismissed, not when the
+push is issued. Check the other entry points that reach the same destination. Test a double tap.
+
+### IOS-063 - After an async fetch, re-check the account before saving [HIGH]
+
+**Seen:** A background fetch wrote settings to local storage when it finished. If the user had
+logged out or switched tenant meanwhile, the data landed in the next account's storage. A copy
+step also carried settings from one tenant's cache to another.
+**Action:** Capture the account or tenant key before the request and compare it with the current
+one before any write, or key the cache by account. For every new async write, ask what happens
+after logout. Search for code that copies settings between accounts.
+
+### IOS-064 - A new app extension or widget needs its own checklist [MEDIUM]
+
+**Seen:** New widgets shipped with missing localisation, absent plist keys, no stated refresh
+cadence, a signing variable defined for one pipeline only, and local data cleared on logout
+that the widget kept reading.
+**Action:** For each new extension, check: string catalog entries, Info.plist keys, refresh
+policy, signing and provisioning in every pipeline, shared storage and what clears it on
+logout or tenant change, and the layer the extension target is allowed to import.

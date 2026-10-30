@@ -27,6 +27,12 @@ spec or ticket doesn't say, that is the first question - fixing toward a guessed
 
 Evidence before cause: for async, notification or rendering behavior, ask for the log or
 HTML/state dump before proposing a fix; a traced call path is a hypothesis.
+Evidence-to-fix check: before calling a change a fix for an observed failure, name the evidence
+(frame, breadcrumb, log line, repro step) and the changed line that sits on that path. If no
+changed line does, call the change hardening, say the observed failure may remain, and do not
+write QE or release notes as if it were fixed. A defensive change justified by a claim ("this
+can fire twice", "this list can be empty here") needs a search for the callers that would make
+it true; with none, drop the change. Report tests that were written but not run as "not run".
 When applying a reviewer's suggested fix, validate it against how the data is actually used
 first (a suggestion that cleared one of two lists would have brought the old data back).
 

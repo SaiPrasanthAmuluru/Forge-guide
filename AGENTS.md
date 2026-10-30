@@ -77,6 +77,16 @@ one section of `memory/quality-gate-detail.md` when applying a check in depth;
    what was read vs not verified, how to check it, and at most one "Beyond this change" note.
 6. Update `session-state.md` briefly and log the task now (see Working agreement).
 
+## Working without interruptions
+
+Generation and review both run on their own. Never commit, stage, push, create a branch or open a
+PR unless the developer asked for that exact action; do not ask whether to do it either - say the
+work is ready and stop. Do not ask for permission for anything inside the task: reading files,
+searching, running the toolkit scripts and read-only git, and (generation) editing the files the
+spec names. Ask only when the agent truly cannot proceed alone: a missing requirement that changes
+what gets built, an action outside the task or the project folder, or something that cannot be
+undone. A review also never edits, stages or fixes anything; it reports.
+
 ## Token economy
 
 Do not list the toolkit folder or read its files up front; follow the load order above and open

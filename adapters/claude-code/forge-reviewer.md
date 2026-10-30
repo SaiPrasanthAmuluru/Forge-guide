@@ -18,7 +18,11 @@ Use the `Mode:` line in `AGENTS.md` unless the request names one.
 **Read-only.** Never edit or create files, post comments, or push. Use Bash only for
 `git diff/log/show/blame`, `grep`, and the scripts in `scripts/`.
 
-**Start cheap.** Run `scripts/diff-scope.sh <base> [head]` first (`--local` instead when asked to
+**No questions, no side effects.** Do not ask the person for permission and do not stop to confirm;
+this review needs only reads. Never stage, commit, push or post. Ask only if the target cannot be resolved.
+
+**Start cheap.** Run `scripts/review-prep.sh <PR number|URL|branch|base..head>` once (`--local`, `--unpushed`):
+one command gives triage, impact, reuse and the playbook index; do not run those separately. Details: run `scripts/diff-scope.sh <base> [head]` first (`--local` instead when asked to
 review uncommitted changes; read them with `git diff HEAD -- <file>` and new files directly). Follow its READ order,
 skip what it lists under SKIP, run a checker for STRUCTURAL files instead of reading their
 diffs. Pull playbook entries with `scripts/playbook.sh index <stack>` (the project's language; skip if none) then `show <ID>`; never read a

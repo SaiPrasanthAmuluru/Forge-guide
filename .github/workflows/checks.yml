@@ -45,6 +45,17 @@ jobs:
           if scripts/verdict-check.sh "$t/soft.md"; then echo "softened verdict not caught"; exit 1; fi
           scripts/verdict-check.sh "$t/ok.md"
 
+      - name: review-prep runs all scans in one command
+        run: |
+          set -e
+          R="$PWD"; t="$(mktemp -d)"; cd "$t"
+          git init -q -b main .; git config user.email a@b; git config user.name n
+          mkdir src; printf 'let a = 1\n' > src/a.txt; git add .; git commit -qm base
+          git checkout -q -b feat; printf 'let a = 2\n' > src/a.txt; git commit -qam change
+          out="$("$R/scripts/review-prep.sh" main..feat)"
+          for h in "-- TRIAGE" "-- IMPACT" "-- REUSE" "-- PLAYBOOK" "-- TIMINGS"; do echo "$out" | grep -q -e "$h" || { echo "missing $h"; exit 1; }; done
+          echo x >> src/a.txt; "$R/scripts/review-prep.sh" --local | grep -q "uncommitted"
+
   macos:
     # The scripts must work with the BSD tools that ship on macOS (sed, awk), not only GNU ones.
     runs-on: macos-latest

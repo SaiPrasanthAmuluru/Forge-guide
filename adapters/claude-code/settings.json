@@ -1,10 +1,40 @@
 {
+  "permissions": {
+    "allow": [
+      "Read",
+      "Grep",
+      "Glob",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git status:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git merge-base:*)",
+      "Bash(git grep:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git blame:*)",
+      "Bash(<TOOLKIT>/scripts/review-prep.sh:*)",
+      "Bash(<TOOLKIT>/scripts/pr-range.sh:*)",
+      "Bash(<TOOLKIT>/scripts/diff-scope.sh:*)",
+      "Bash(<TOOLKIT>/scripts/impact.sh:*)",
+      "Bash(<TOOLKIT>/scripts/reuse-scan.sh:*)",
+      "Bash(<TOOLKIT>/scripts/local-changes.sh:*)",
+      "Bash(<TOOLKIT>/scripts/playbook.sh:*)",
+      "Bash(<TOOLKIT>/scripts/verdict-check.sh:*)"
+    ],
+    "additionalDirectories": [
+      "<TOOLKIT>"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "f=\"${FORGE_HOME:-$CLAUDE_PROJECT_DIR}/scripts/pr-gate.sh\"; if [ -x \"$f\" ]; then exec \"$f\"; fi; exit 0" }
+          {
+            "type": "command",
+            "command": "f=\"${FORGE_HOME:-$CLAUDE_PROJECT_DIR}/scripts/pr-gate.sh\"; if [ -x \"$f\" ]; then exec \"$f\"; fi; exit 0"
+          }
         ]
       }
     ]

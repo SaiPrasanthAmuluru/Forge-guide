@@ -11,7 +11,8 @@ Start the agent in the project you are working on, not in the toolkit folder. Op
 
 > Use `<TOOLKIT>/review/review-prompt.md` as the review rubric. Base `<sha>`, head `<sha>`.
 > Mode: standard. PR description: ...
-> Read-only: do not edit, stage or commit anything. Run the toolkit scripts by absolute path.
+> Read-only: do not edit, stage or commit anything, and do not ask for permission to read.
+> Run `<TOOLKIT>/scripts/review-prep.sh <PR number or URL>` once instead of the scripts one by one.
 
 ## Review local changes before committing
 
@@ -24,7 +25,7 @@ Start the agent in the project you are working on, not in the toolkit folder. Op
 ## Generate or change code
 
 > Follow `<TOOLKIT>/AGENTS.md` for this task: <what you want>.
-> Fit the existing code, change only what the spec names, and do not commit or open a PR.
+> Fit the existing code, change only what the spec names, and do not stage, commit, push or open a PR (and do not ask whether to).
 
 ## Report on a batch of work
 

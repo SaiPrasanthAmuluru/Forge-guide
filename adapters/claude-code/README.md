@@ -33,3 +33,19 @@ Optional files. Everything else in the toolkit works without them.
 
 `CLAUDE.md` in the repo root only imports `AGENTS.md` and adds Claude Code notes, for the case
 where Claude Code is pointed at this repo directly.
+
+## Faster reviews, fewer prompts
+
+A review only reads, so it should not need approvals. Two things caused the waiting:
+
+1. **Many small commands.** Each script ran as its own command, one after another. Use
+   `scripts/review-prep.sh <PR number|URL|branch>` once (`--local`, `--unpushed`): it runs triage,
+   impact scan, reuse scan and playbook index at the same time and prints one report.
+2. **Prompts for reads.** `settings.json` now has a read-only `permissions` block. Replace
+   `<TOOLKIT>` (in `allow` and `additionalDirectories`) with your absolute toolkit path, e.g.
+   `/Users/you/Apps/Forge-guide`, and merge it into `~/.claude/settings.json`. It allows Read, Grep,
+   Glob, read-only git and the toolkit scripts, and lets the agent read the toolkit folder.
+
+Still prompts, by design: edits, `git commit/add/push`, and commands chained with pipes, `&&` or
+`$(...)` (allow-rules match one command). The agent rules say not to commit or push unasked.
+`pr-range.sh` fetches the PR into private refs under `refs/forge/` (nothing in your branches).

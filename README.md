@@ -205,6 +205,7 @@ Forge-guide/
 │   ├── report-metrics.sh     # reads the three ledgers: tokens by type/phase, escapes, precision, playbook hits
 │   ├── playbook.sh           # index / show <ID> / find <kw> - read playbook entries, not the file
 │   ├── diff-scope.sh         # review pre-filter: read order, skips, budget - from numstat only
+│   ├── review-prep.sh        # one command for review prep: triage + impact + reuse + playbook index, run together
 │   ├── verdict-check.sh      # fails when a review verdict is softer than its findings (gate arithmetic)
 │   ├── drift-check.sh
 │   ├── verify-spec.sh

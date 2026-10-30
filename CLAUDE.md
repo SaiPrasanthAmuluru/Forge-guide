@@ -10,6 +10,8 @@ The rules above are the whole workflow; this file only adds what is specific to 
 - The read-only reviewer is the `forge-reviewer` subagent (`adapters/claude-code/forge-reviewer.md`);
   its fresh context counts as the independent pass. Call it with
   `forge-reviewer: review <base>..<head>`.
+- Reviews start with one command, `scripts/review-prep.sh`; the same file has a read-only `permissions`
+  allowlist so reviews do not prompt (replace `<TOOLKIT>`). Never commit or push unasked.
 - `adapters/claude-code/settings.json` registers `scripts/pr-gate.sh` as a PreToolUse hook that
   stops the agent from opening PRs (the developer decides); merge it into `~/.claude/settings.json`
   and export `FORGE_HOME` (see `adapters/claude-code/README.md`).

@@ -28,6 +28,8 @@ TD="$(mktemp -d)"; trap 'rm -rf "$TD"' EXIT
 VENDOR='(^|/)(Pods|Carthage|node_modules|vendor|\.build|build|dist|DerivedData|\.venv|venv|target|__pycache__|\.next|coverage)/'
 TESTP='(^|/)(tests?|__tests__|spec|specs)/|[._-]tests?\.[A-Za-z]+$|[._-]spec\.[A-Za-z]+$|Tests?\.[A-Za-z]+$|(^|/)test_[^/]*\.py$|_test\.go$'
 # Names too generic to search by text; reported as skipped, never silently.
+# A name with more matching production files than this is treated as noise, not a consumer list.
+NOISE="${IMPACT_NOISE_FILES:-25}"
 STOP=' body init deinit viewDidLoad viewWillAppear viewDidAppear viewWillDisappear viewDidDisappear description hash id name title type value count items data text state view index result error key keys values self '
 
 : > "$TD/syms"        # lines: name<TAB>kind (changed|removed|planned)
@@ -168,7 +170,7 @@ if [ "$total" -eq 0 ]; then
 fi
 [ "$total" -gt "$MAXSYM" ] && echo "note: $total symbols; showing the first $MAXSYM (IMPACT_MAX_SYMBOLS to raise)"
 
-: > "$TD/areas_all"; flagged=0; shown=0
+: > "$TD/areas_all"; flagged=0; shown=0; noisy=""
 while IFS="$(printf '\t')" read -r n k; do
   [ "$shown" -ge "$MAXSYM" ] && break; shown=$((shown+1))
   git grep -nIw -- "$n" 2>/dev/null | grep -Ev "$VENDOR" > "$TD/hits" || true
@@ -183,6 +185,14 @@ while IFS="$(printf '\t')" read -r n k; do
   else cp "$TD/pfiles" "$TD/pout"; cp "$TD/tfiles" "$TD/tout"; fi
   np="$(wc -l < "$TD/pfiles" | tr -d ' ')"; npo="$(wc -l < "$TD/pout" | tr -d ' ')"
   nt="$(wc -l < "$TD/tfiles" | tr -d ' ')"; nto="$(wc -l < "$TD/tout" | tr -d ' ')"
+  # Overloaded or dictionary-like names (advance, lookup, centre) match unrelated code. When the
+  # name is declared in several production files, or matches more than NOISE files, say so and do
+  # not present the hits as consumers; the person narrows it with --symbols or xref.sh.
+  ndecl="$(git grep -nIE "(func|var|let|def|fn|function|fun|val)[[:space:]]+$n([^A-Za-z0-9_]|$)" 2>/dev/null | grep -Ev "$VENDOR" | cut -d: -f1 | grep -Eiv "$TESTP" | sort -u | wc -l | tr -d ' ')"
+  if [ "$np" -gt "$NOISE" ] || [ "$ndecl" -gt 3 ]; then
+    echo "-- $n [$k]: NOISY - $np production files match, declared in $ndecl files; too generic to list consumers by text. Check the real callers with scripts/xref.sh or a type-qualified search; not counted below."
+    noisy="$noisy $n"; continue
+  fi
   flag=""; if [ "$npo" -gt 0 ]; then flag="  <- consumers in untouched files"; flagged=$((flagged+1)); fi
   if [ "$k" = removed ] && [ "$((npo+nto))" -gt 0 ]; then flag="  <- REMOVED but still referenced"; fi
   echo "-- $n [$k]: production $np files ($npo outside the change), tests $nt files ($nto outside)$flag"
@@ -196,7 +206,7 @@ while IFS="$(printf '\t')" read -r n k; do
 done < "$TD/list"
 
 orphans
-echo "== summary: $shown symbols, $flagged with production consumers in files the change did not touch =="
+echo "== summary: $shown symbols, $flagged with production consumers in files the change did not touch${noisy:+; noisy, not counted:$(printf "%s\n" $noisy | sort -u | tr "\n" " ")} =="
 if [ -s "$TD/areas_all" ]; then
   echo "areas to confirm (flow still correct, adapted, or out of scope by decision):"
   sort "$TD/areas_all" | uniq -c | sort -rn | head -n 10 | sed -E 's/^ *([0-9]+) (.*)$/   \2  (\1 file refs)/'

@@ -14,6 +14,6 @@ forge-review:
     GIT_DEPTH: "0"
   script:
     - apt-get update -qq && apt-get install -y -qq git curl ca-certificates >/dev/null
-    - git clone --depth 1 --branch v0.1.0 https://github.com/SaiPrasanthAmuluru/Forge-guide.git /tmp/forge  # release tag; use main to track latest
+    - git clone --depth 1 --branch v0.1.1 https://github.com/SaiPrasanthAmuluru/Forge-guide.git /tmp/forge  # release tag; use main to track latest
     - if [ -n "$FORGE_AGENT_INSTALL" ]; then sh -c "$FORGE_AGENT_INSTALL"; fi
     - /tmp/forge/scripts/ci-review.sh --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA" --head "$CI_COMMIT_SHA" --pr "$CI_MERGE_REQUEST_IID" --host gitlab

@@ -1,0 +1,13 @@
+{
+  "description": "Stops the agent from opening a pull request by itself (the developer decides).",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "f=\"${FORGE_HOME:-}/scripts/pr-gate.sh\"; if [ -x \"$f\" ]; then exec \"$f\"; fi; exit 0" }
+        ]
+      }
+    ]
+  }
+}

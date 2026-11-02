@@ -275,6 +275,10 @@ a helper already exists" into steps with output, so they are not skipped under p
 
 ## Using the toolkit from outside your project
 
+Run `./install.sh --profile` once in the clone: it checks the scripts and adds `FORGE_HOME` to your
+shell profile (it changes nothing else). For Claude Code, `adapters/claude-code/install.sh` or the
+plugin (`adapters/claude-code/plugin/`) adds the skills and reviewer.
+
 Keep one clone of this repo (say `~/Tools/Forge-guide`), set `export FORGE_HOME=~/Tools/Forge-guide`
 in your shell profile (the reviewer subagent reads it to find the rules), and start your agent from the
 *project*, with the toolkit readable as a reference (an extra directory, a workspace folder,

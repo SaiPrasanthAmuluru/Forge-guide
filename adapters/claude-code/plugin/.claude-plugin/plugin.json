@@ -1,0 +1,10 @@
+{
+  "name": "forge-guide",
+  "version": "0.1.2",
+  "description": "Token-conscious spec-driven workflow and read-only PR review for AI coding agents: seven task skills, a read-only reviewer subagent and a hook that stops the agent opening PRs by itself.",
+  "author": { "name": "Sai Prasanth A", "url": "https://github.com/SaiPrasanthAmuluru" },
+  "homepage": "https://github.com/SaiPrasanthAmuluru/Forge-guide",
+  "repository": "https://github.com/SaiPrasanthAmuluru/Forge-guide",
+  "license": "MIT",
+  "keywords": ["code-review", "spec-driven", "workflow", "pull-request"]
+}

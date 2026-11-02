@@ -49,3 +49,12 @@ A review only reads, so it should not need approvals. Two things caused the wait
 Still prompts, by design: edits, `git commit/add/push`, and commands chained with pipes, `&&` or
 `$(...)` (allow-rules match one command). The agent rules say not to commit or push unasked.
 `pr-range.sh` fetches the PR into private refs under `refs/forge/` (nothing in your branches).
+
+## Install options
+
+- **Script:** `adapters/claude-code/install.sh` copies the skill wrappers and reviewer into `~/.claude`.
+  Run the toolkit's `./install.sh --profile` first to set `FORGE_HOME`.
+- **Plugin:** `plugin/` bundles the wrappers, reviewer and PR gate hook for `/plugin install`
+  (see `plugin/README.md`). Use one route, not both. `sync-plugin.sh` keeps its copies in step with
+  the files above; CI checks it.
+Both need the Forge-guide clone, because the scripts and rules are read from it.

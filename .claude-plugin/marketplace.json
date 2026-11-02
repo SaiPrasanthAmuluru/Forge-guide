@@ -1,0 +1,11 @@
+{
+  "name": "forge-guide",
+  "owner": { "name": "Sai Prasanth A" },
+  "plugins": [
+    {
+      "name": "forge-guide",
+      "source": "./adapters/claude-code/plugin",
+      "description": "Spec-driven workflow skills and a read-only PR reviewer. Needs the Forge-guide clone for its scripts: set FORGE_HOME (see install.sh)."
+    }
+  ]
+}

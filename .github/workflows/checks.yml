@@ -33,6 +33,13 @@ jobs:
           em="$(printf '\342\200\224')"; en="$(printf '\342\200\223')"
           if grep -rIn --exclude-dir=.git -e "$em" -e "$en" . ; then echo "replace long dashes with plain hyphens"; exit 1; fi
 
+      - name: Plugin copy matches the sources
+        run: adapters/claude-code/sync-plugin.sh --check
+
+      - name: install.sh runs without changing anything
+        run: |
+          HOME="$(mktemp -d)" ./install.sh | grep -q 'scripts run'
+
       - name: Playbook index works
         run: scripts/playbook.sh stacks
 

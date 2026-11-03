@@ -82,3 +82,9 @@ nothing is added to the repos. It only runs while the Mac is awake and you are l
 
 `--max N` caps reviews per run so one burst of PRs cannot use up your plan limit. The command
 syntax for `--allowedTools` is untested here; if reviews come back empty, read `~/.forge/poll.log`.
+
+Disk use: one small file per reviewed commit (about 15 KB) in `~/.forge/reviews/`. Each run checks
+the PR's status with `gh`: a merged or closed PR's reviews are deleted once it has been closed for 2
+days (`FORGE_CLOSED_DAYS`), an open PR keeps only its 2 newest reviews, and anything older than 30
+days (`FORGE_KEEP_DAYS`) goes regardless. `poll.log` stays under about 1 MB. Without network, only the
+age rule runs.

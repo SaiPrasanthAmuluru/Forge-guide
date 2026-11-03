@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Runs scripts/review-poll.sh every 15 minutes while you are logged in. Replace <TOOLKIT> with
+<!-- Runs scripts/review-poll.sh every 15 minutes while you are logged in. Replace <TOOLKIT> and <HOME> (your home folder, e.g. /Users/you; claude and gh are often in <HOME>/.local/bin) with
      the absolute path of your Forge-guide clone, then:
        cp this file ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.forgeguide.review-poll.plist
      Stop it: launchctl unload ~/Library/LaunchAgents/com.forgeguide.review-poll.plist -->
@@ -17,7 +17,7 @@
   <key>RunAtLoad</key><true/>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>PATH</key><string><HOME>/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
   </dict>
   <key>StandardErrorPath</key><string>/tmp/forge-review-poll.err</string>
 </dict>

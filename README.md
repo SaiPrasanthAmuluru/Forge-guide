@@ -206,6 +206,7 @@ Forge-guide/
 │   ├── playbook.sh           # index / show <ID> / find <kw> - read playbook entries, not the file
 │   ├── diff-scope.sh         # review pre-filter: read order, skips, budget - from numstat only
 │   ├── review-prep.sh        # one command for review prep: triage + impact + reuse + playbook index, run together
+│   ├── review-poll.sh        # on a schedule: review new open PRs on this machine, save the reviews (no posting unless --post)
 │   ├── verdict-check.sh      # fails when a review verdict is softer than its findings (gate arithmetic)
 │   ├── drift-check.sh
 │   ├── verify-spec.sh

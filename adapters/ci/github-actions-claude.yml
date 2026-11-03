@@ -1,0 +1,58 @@
+# GitHub Actions, ready to use with Claude Code as the agent. Copy to
+# <repo>/.github/workflows/forge-review.yml in each repository you want reviewed.
+# UNTESTED TEMPLATE: try it on a throwaway PR first.
+#
+# One-time, per repository (GitHub has no account-wide secrets for personal accounts):
+#   1. Settings > Secrets and variables > Actions > New repository secret:
+#      ANTHROPIC_API_KEY (billed per use) or CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`;
+#      check that your plan allows CI use).
+#   2. Settings > Actions > General > Workflow permissions: Read and write.
+#   3. Commit this file. Every opened or updated PR then gets one review comment, edited in place.
+# The diff is sent to the model provider, so use it only on repositories where that is allowed.
+name: Forge review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    concurrency:
+      group: forge-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true          # a newer push replaces a review still running
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: SaiPrasanthAmuluru/Forge-guide
+          ref: v0.1.3         # release tag; main tracks latest
+          path: .forge-toolkit
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the agent
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Forge review
+        run: |
+          .forge-toolkit/scripts/ci-review.sh \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --pr "${{ github.event.pull_request.number }}" --host github
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Read-only: reading files, read-only git and the toolkit scripts. Nothing else is allowed.
+          FORGE_AGENT_CMD: >-
+            claude -p --model sonnet --max-turns 40
+            --allowedTools "Read Grep Glob Bash(git diff:*) Bash(git log:*) Bash(git show:*) Bash(git grep:*) Bash(git rev-parse:*) Bash(git merge-base:*) Bash(${{ github.workspace }}/.forge-toolkit/scripts/review-prep.sh:*) Bash(${{ github.workspace }}/.forge-toolkit/scripts/playbook.sh:*)"

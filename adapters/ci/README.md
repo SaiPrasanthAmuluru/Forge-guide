@@ -15,6 +15,15 @@ CI system. The runner:
 | Bitbucket Cloud | `bitbucket-pipelines.yml` | PR comment | `BITBUCKET_TOKEN` repo access token, PR write |
 | GitHub | `github-actions.yml` | PR comment | the job's `github.token` |
 
+## Quick start for your own GitHub repositories (Claude Code as the agent)
+
+Use `github-actions-claude.yml`: it already contains the agent command, so there is nothing to
+write. Per repository: add the `ANTHROPIC_API_KEY` (or `CLAUDE_CODE_OAUTH_TOKEN`) secret, set
+workflow permissions to read and write, copy the file to `.github/workflows/forge-review.yml`.
+Draft PRs and PRs from forks are skipped; a new push cancels a review still running. It is an
+untested template: use a throwaway PR first and watch the Actions tab. Cost is per review, so
+watch the first few runs on your API usage page.
+
 ## What your agent command must do
 
 Read the request on stdin and print only the finished Markdown review. It runs in the checkout, so

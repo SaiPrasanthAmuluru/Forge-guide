@@ -58,3 +58,27 @@ Still prompts, by design: edits, `git commit/add/push`, and commands chained wit
   (see `plugin/README.md`). Use one route, not both. `sync-plugin.sh` keeps its copies in step with
   the files above; CI checks it.
 Both need the Forge-guide clone, because the scripts and rules are read from it.
+
+## Scheduled reviews on your own machine (no CI, no repo secrets)
+
+`scripts/review-poll.sh` checks your repos for open, non-draft PRs whose latest commit has not been
+reviewed, runs the agent on each, and saves the review under `~/.forge/reviews/`. It never comments
+unless you pass `--post`. It uses your own signed-in `claude` and `gh`, so there is no API key and
+nothing is added to the repos. It only runs while the Mac is awake and you are logged in.
+
+1. `mkdir -p ~/.forge`, then list the repos in `~/.forge/repos.txt`, one per line:
+   `owner/repo /absolute/path/to/local/clone`
+2. Put the agent command on one line in `~/.forge/agent-cmd` (replace `<TOOLKIT>` with the absolute
+   toolkit path):
+   ```
+   claude -p --model sonnet --max-turns 40 --allowedTools "Read Grep Glob Bash(git diff:*) Bash(git log:*) Bash(git show:*) Bash(git grep:*) Bash(git rev-parse:*) Bash(git merge-base:*) Bash(git fetch:*) Bash(<TOOLKIT>/scripts/review-prep.sh:*) Bash(<TOOLKIT>/scripts/pr-range.sh:*) Bash(<TOOLKIT>/scripts/playbook.sh:*)"
+   ```
+3. Try it by hand first: `<TOOLKIT>/scripts/review-poll.sh --dry-run`, then without `--dry-run`.
+4. Schedule it: copy `launchd/com.forgeguide.review-poll.plist` (edit `<TOOLKIT>`) to
+   `~/Library/LaunchAgents/` and `launchctl load` it. `launchd` is used instead of cron because it
+   runs in your login session, where `claude` and `gh` can read their saved sign-ins.
+5. Background `git fetch` cannot type a key passphrase: load the key once with
+   `ssh-add --apple-use-keychain ~/.ssh/<key>` (or use an HTTPS remote).
+
+`--max N` caps reviews per run so one burst of PRs cannot use up your plan limit. The command
+syntax for `--allowedTools` is untested here; if reviews come back empty, read `~/.forge/poll.log`.

@@ -33,6 +33,21 @@ jobs:
           em="$(printf '\342\200\224')"; en="$(printf '\342\200\223')"
           if grep -rIn --exclude-dir=.git -e "$em" -e "$en" . ; then echo "replace long dashes with plain hyphens"; exit 1; fi
 
+      - name: review-poll dedupes and respects the limit
+        run: |
+          set -e
+          t="$(mktemp -d)"; mkdir -p "$t/bin" "$t/clone/.git" "$t/state"
+          printf '#!/bin/sh\nprintf "7 aaaaaaa1111\\n8 bbbbbbb2222\\n"\n' > "$t/bin/gh"; chmod +x "$t/bin/gh"
+          printf 'me/proj %s\n' "$t/clone" > "$t/state/repos.txt"
+          export FORGE_STATE_HOME="$t/state" PATH="$t/bin:$PATH"
+          export FORGE_AGENT_CMD='printf "Reviewed: a..b | Pass: independent | Mode: standard | Coverage: full\n\nVerdict: Approve\n"'
+          scripts/review-poll.sh --max 1
+          [ "$(ls "$t/state/reviews" | wc -l)" -eq 1 ]
+          scripts/review-poll.sh --max 5
+          [ "$(ls "$t/state/reviews" | wc -l)" -eq 2 ]
+          scripts/review-poll.sh
+          [ "$(ls "$t/state/reviews" | wc -l)" -eq 2 ]
+
       - name: Plugin copy matches the sources
         run: adapters/claude-code/sync-plugin.sh --check
 

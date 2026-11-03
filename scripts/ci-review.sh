@@ -55,9 +55,9 @@ cat > "$tmp/request.md" <<REQ
 Use $here/review/review-prompt.md as the review rubric.
 Mode: $mode. This is a fresh, read-only review: do not edit, stage, commit or push anything.
 Review the change from base $b to head $h${pr:+ (pull request $pr)} in the current checkout.
-Run the toolkit scripts by absolute path from this checkout: $here/scripts/diff-scope.sh $b $h,
-$here/scripts/impact.sh $b $h, $here/scripts/reuse-scan.sh $b $h. Choose the playbook for the
-project's language with $here/scripts/playbook.sh stacks; skip playbooks if none matches.
+Run $here/scripts/review-prep.sh $b..$h once (it runs the triage, impact scan, reuse scan and
+playbook index together; do not run them one by one). Do not ask questions or for permission; if
+something cannot be read, say so in the review.
 Your entire output will be posted as a pull request comment: return only the finished review as
 Markdown, starting with the "Reviewed:" header line.
 REQ

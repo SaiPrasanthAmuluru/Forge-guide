@@ -161,6 +161,8 @@ printf '%s\n' "$numstat" | awk -F'\t' -v risk_file="$RISK_FILE" -v budget="$budg
     }
     print ""
     printf "READ total: %d changed lines (~%d tokens, rough guess).\n", covered, covered * 14
+    nh = 0; for (i = 1; i <= n; i++) if (H[i]) nh++
+    printf "HIGH files: %d (every one is read, removal-only ones included; state \"HIGH read: N/%d\" in the Coverage line)\n", nh, nh
     # Suggested mode: strict when any HIGH-risk file changed, fast when the change is small and
     # has no HIGH or STRUCTURAL file, standard otherwise. Only READ files are counted.
     anyhigh = 0; srcl = 0

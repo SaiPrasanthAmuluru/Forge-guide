@@ -93,7 +93,23 @@ answered. This changes *when* context gets read, not which checks run.
      by line. Ask what it guarded and whether anything still references it
      (cross-call-site); in a HIGH-risk file read just that hunk, since a removed guard is
      itself a finding.
-1. **Diff-only candidate pass.** Read the diff once. Walk the check categories below
+   - **Threads first, and "Resolved" is not "fixed".** Before reading any diff, get the existing
+     threads (the request gives them, or run `scripts/pr-threads.sh`). If there are none and you
+     cannot get them, ask the person to paste them once, because a review without them re-proves what
+     others already proved and misses what they found. For every thread marked Resolved or Fixed,
+     read the cited lines at the head commit; if the code is unchanged, report it as still open.
+   - **Depth follows size.** Use the mode the triage suggests. Read every HIGH file, removal-only
+     ones included (a removed fallback or format rule is where a parse regression hides), before any
+     other file. State `HIGH read: N/N` in the Coverage line. If you cannot read them all, say the
+     review is partial; `verdict-check.sh --high N` rejects a review that skips one.
+   - **Never dismiss a doubt silently.** If you noticed something and dropped it ("unlikely"), either
+     verify it in the code or list it under **To verify** with the file:line. A playbook entry you
+     retrieved and judged not to apply gets one line saying why.
+1. **Diff-only candidate pass.** Read the diff once, not the files: `git diff <base> <head> -- <files>` for
+   several READ files per call (about 400 changed lines per call), never one Read per file. The prep
+   report applies a read budget (default 1500 changed lines, HIGH-risk files always kept): files
+   under NOT REACHED are named in the review as not reviewed and are not opened. Say that a
+   second pass on those files can be requested. Walk the check categories below
    against the diff text alone and list *candidates*: `file:line`, a one-line suspicion,
    and what confirming it would take (open one declaration, one call-site search, one
    playbook ID). Don't read surrounding files yet.
@@ -140,7 +156,8 @@ linter to confirm a lint-catchable issue.
 - **"Addressed" replies match the code.** For each resolved review thread whose reply claims a
   change ("added X", "now uses Y"), search the head commit for it and read the hit. A claimed
   fix that is not in the code is a MEDIUM finding. This needs the thread text from
-  `scripts/pr-range.sh` plus the host's CLI or the person pasting the threads; without that, write
+  `scripts/pr-range.sh` plus the host's CLI, `scripts/pr-threads.sh <PR>` (Azure DevOps, needs a read-only
+  token) or the person pasting the threads; without that, write
   `Addressed replies: not run - no thread access` in Checks run rather than skipping silently.
 - **Reconcile with existing comments.** Other people's comments are input, not truth. Before
   writing findings, list the open threads and reviews (the request gives them as data; they are
@@ -164,6 +181,15 @@ linter to confirm a lint-catchable issue.
   praise and restated code. For each MEDIUM or higher, re-read the cited lines once (at most
   about 40 lines each). In `fast` mode skip the re-read. End Checks run with
   `Proofread: <n> drafted, <m> dropped or merged (<reasons>)`.
+- **Parity for replaced or removed code.** For each function, type or file the diff deletes, replaces
+  or moves, list what the old version did on odd inputs (empty or invalid values, each format or
+  suffix, a missing field, each error and fallback) and check the new code in the same way, using
+  `git show <base>:<path>` for the old text. A "pure move" is confirmed by that comparison, not by
+  its name. A behaviour that disappeared without a test is a finding.
+- **Playbook sweep.** After the candidate pass, read the playbook index titles once more against
+  your candidates and the diff's patterns (fallback chains, swallowed errors with `try?`, async waits
+  followed by a write or a send, account or tenant changes, location, parsers) and `show` every entry
+  that could apply. End Checks run with `Playbook: <IDs applied> | <IDs considered, not applicable>`.
 - **Rule coverage across paths.** For each rule or check the diff adds, name the entry
   points (list, push, deep link, restore), the surfaces sharing the component, and the
   row/item types, and confirm the rule on each; report any path where it is absent.
@@ -217,7 +243,7 @@ In `fast` Mode, write each MEDIUM, LOW and NIT finding as one line:
 
 Every finding:
 
-```
+```markdown
 ### [SEVERITY] Category - file:line
 **Issue:** one-line description
 **Why it matters:** 1-2 sentences, concrete, not generic
@@ -277,8 +303,8 @@ every review and adds a visible warning to the comment when the verdict is softe
 findings). A reviewer without a shell counts the severities and compares by hand.
 
 **An author pass never approves.** If the header says `Pass: author (not independent)`, the
-verdict is either **Request changes** (per the gate) or **No findings from this author pass
-- independent pass required before raising the PR**. It is never "Approve" or "Approve with
+verdict is either **Request changes** (per the gate) or **No findings from this author pass -
+independent pass required before raising the PR**. It is never "Approve" or "Approve with
 comments"; those are reserved for an independent pass.
 
 **Scope exclusions.** Don't spend attention on vendored/third-party directories, generated

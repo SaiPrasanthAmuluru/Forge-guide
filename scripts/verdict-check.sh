@@ -6,6 +6,7 @@
 #
 # Usage: scripts/verdict-check.sh <review.md> [--waived N]
 #        cat review.md | scripts/verdict-check.sh - [--waived N]
+#   --high N     number of HIGH files the triage listed; the review must state "HIGH read: N/N"
 #   --waived N   number of MEDIUM findings that have an entry in logs/suppressions.md
 #                (this script does not read that file; pass the count)
 # Counts findings from "### [SEVERITY] ..." headings and one-line "[SEVERITY] file:line ..."
@@ -15,10 +16,10 @@
 #       2 no verdict line found (cannot check). Prints the required verdict either way.
 # Bash 3.2 / BSD safe. Read-only.
 set -u
-f="${1:-}"; waived=0
+f="${1:-}"; waived=0; highn=""
 [ -n "$f" ] || { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 shift
-while [ $# -gt 0 ]; do case "$1" in --waived) waived="${2:-0}"; shift 2 ;; *) shift ;; esac; done
+while [ $# -gt 0 ]; do case "$1" in --waived) waived="${2:-0}"; shift 2 ;; --high) highn="${2:-}"; shift 2 ;; *) shift ;; esac; done
 tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
 if [ "$f" = "-" ]; then cat > "$tmp"; else cat "$f" > "$tmp" 2>/dev/null || { echo "cannot read $f" >&2; exit 2; }; fi
 
@@ -44,6 +45,14 @@ if [ "$approves" = 1 ] && [ $((crit + high + med_open)) -gt 0 ]; then
 fi
 if [ "$approves" = 1 ] && [ "$author" = 1 ]; then
   echo "MISMATCH: an author pass (not independent) never approves."; exit 1
+fi
+hr="$(grep -Eo 'HIGH read: *[0-9]+ */ *[0-9]+' "$tmp" | tail -n 1 | tr -d ' ')"
+if [ -n "$hr" ]; then
+  hx="$(printf '%s' "$hr" | sed 's/HIGHread://; s#/.*##')"; hy="$(printf '%s' "$hr" | sed 's#.*/##')"
+  if [ "$hx" -lt "$hy" ]; then echo "MISMATCH: only $hx of $hy HIGH-risk files were read; read the rest or mark the review partial."; exit 1; fi
+  if [ -n "$highn" ] && [ "$hy" != "$highn" ]; then echo "MISMATCH: the review counts $hy HIGH files, the triage listed $highn."; exit 1; fi
+elif [ -n "$highn" ] && [ "$highn" -gt 0 ]; then
+  echo "MISMATCH: the triage listed $highn HIGH-risk file(s) but the review has no \"HIGH read: N/$highn\" statement."; exit 1
 fi
 echo "ok: the verdict is not softer than the findings."
 exit 0

@@ -17,6 +17,12 @@ here="$(cd "$(dirname "$0")" && pwd)"
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Run this inside the project's git checkout." >&2; exit 1; }
 TD="$(mktemp -d)"; trap 'rm -rf "$TD"' EXIT
 now() { date +%s; }
+# Review cost is mostly reading. Cap the lines read in full; HIGH-risk files are always kept and the
+# rest are named under NOT REACHED. FORGE_READ_BUDGET=0 removes the cap.
+BUDGET="${FORGE_READ_BUDGET:-1500}"
+# The impact scan found nothing in 15 PRs of real use (generic names), so it is off by default.
+# FORGE_IMPACT=1 turns it on; impact.sh --symbols <names> stays available for a declaration you changed.
+IMPACT="${FORGE_IMPACT:-0}"
 
 mode=range; label=""; base=""; head=""
 case "$1" in
@@ -40,13 +46,13 @@ run() { # name command...
 }
 start="$(now)"
 if [ "$mode" = local ]; then
-  run triage "$here/diff-scope.sh" --local
-  run impact "$here/impact.sh" HEAD
+  run triage "$here/diff-scope.sh" --local --budget "$BUDGET"
+  [ "$IMPACT" = 1 ] && run impact "$here/impact.sh" HEAD
   run reuse  "$here/reuse-scan.sh" HEAD
   git diff --name-only HEAD > "$TD/files.txt" 2>/dev/null; git ls-files --others --exclude-standard >> "$TD/files.txt" 2>/dev/null
 else
-  run triage "$here/diff-scope.sh" "$base" "$head"
-  run impact "$here/impact.sh" "$base" "$head"
+  run triage "$here/diff-scope.sh" "$base" "$head" --budget "$BUDGET"
+  [ "$IMPACT" = 1 ] && run impact "$here/impact.sh" "$base" "$head"
   run reuse  "$here/reuse-scan.sh" "$base" "$head"
   git diff --name-only "$base...$head" > "$TD/files.txt" 2>/dev/null
 fi
@@ -66,7 +72,7 @@ echo "== review-prep: $label =="
 [ "$mode" = local ] || echo "base $base   head $head   header: Reviewed: $base..$head | Pass: ... | Mode: ... | Coverage: ..."
 echo
 echo "-- TRIAGE (diff-scope) --"; cat "$TD/triage.out"
-echo; echo "-- IMPACT --"; cat "$TD/impact.out"
+echo; echo "-- IMPACT --"; if [ "$IMPACT" = 1 ]; then cat "$TD/impact.out"; else echo "off (FORGE_IMPACT=1 to run). For a declaration the change removes or renames, run impact.sh --symbols <names>."; fi
 echo; echo "-- REUSE --"; cat "$TD/reuse.out"
 echo; echo "-- PLAYBOOK --"
 if [ -s "$TD/stacks.txt" ]; then
@@ -77,4 +83,4 @@ fi
 echo; echo "-- TIMINGS (seconds; scans ran at the same time, total $(( $(now) - start ))) --"
 for n in triage impact reuse; do printf '%s %s  ' "$n" "$(cat "$TD/$n.sec" 2>/dev/null || echo ?)"; done; echo
 echo
-echo "Next: read the files in the TRIAGE order, then confirm candidates from IMPACT and REUSE. Do not re-run these scripts."
+echo "Next: read the diff of the READ files in the TRIAGE order (batches of several files per git diff call, not whole files), then confirm candidates from IMPACT and REUSE. Name what is under NOT REACHED in the review. Do not re-run these scripts."

@@ -11,6 +11,8 @@ listed here), add it - this file grows from actual mistakes, not from theory.
 
 ---
 
+## Entries
+
 ### IOS-001 - Core Data: `NSBatchDeleteRequest` skips cascade delete rules [CRITICAL]
 
 **Seen:** A "delete this tenant's row" function used `NSBatchDeleteRequest` for performance.
@@ -358,8 +360,8 @@ the `Task` itself carries the actor context the bare `async let` lacks.
 ### IOS-027 - A `@Sendable` mock closure can't capture a mutable `var` or a non-`Sendable` iterator [MEDIUM]
 
 **Seen:** A mock's `resultProvider` closure, marked `@Sendable` (required by the protocol it
-mocks), captured a local `var callCount` and a non-`Sendable` `AsyncStream` iterator directly
-- both are compile errors under Swift 6's strict concurrency checking once the closure is
+mocks), captured a local `var callCount` and a non-`Sendable` `AsyncStream` iterator directly -
+both are compile errors under Swift 6's strict concurrency checking once the closure is
 actually `@Sendable`-checked, since a plain captured `var` isn't safe to mutate from
 whatever isolation context invokes the closure, and the iterator itself isn't `Sendable`.
 Seen across three overlapping-cycle concurrency-race tests in the same file, all needing the
@@ -751,7 +753,10 @@ logged out or switched tenant meanwhile, the data landed in the next account's s
 step also carried settings from one tenant's cache to another.
 **Action:** Capture the account or tenant key before the request and compare it with the current
 one before any write, or key the cache by account. For every new async write, ask what happens
-after logout. Search for code that copies settings between accounts.
+after logout. Search for code that copies settings between accounts. For an action a user taps
+on a widget or notification, carry the account that was on screen into the action and compare it
+with the active account before the work starts and again before anything is sent, because the
+active account can change while location, network or other waits are in progress.
 
 ### IOS-064 - A new app extension or widget needs its own checklist [MEDIUM]
 
@@ -761,3 +766,35 @@ that the widget kept reading.
 **Action:** For each new extension, check: string catalog entries, Info.plist keys, refresh
 policy, signing and provisioning in every pipeline, shared storage and what clears it on
 logout or tenant change, and the layer the extension target is allowed to import.
+
+### IOS-065 - Location submitted must be the fix that was validated, and it must be fresh [HIGH]
+
+**Seen:** A feature checked a GPS fix against an allowed area, then sent the coordinates of the
+reverse-geocoded address (a nearby point, or zero when the address had no location) together with
+the original fix's accuracy. A fix that was minutes old also passed, because only accuracy and a
+simulated-location flag were checked.
+**Action:** Send the coordinates and accuracy of the exact fix that passed the check; take only the
+address text from the geocoder. Reject a fix whose timestamp is older than an agreed limit, and
+check the age again just before sending, since geocoding and header collection happen in between.
+Test an address with different or missing coordinates, and an old fix inside the allowed area.
+
+### IOS-066 - A rewrite that moves or replaces a parser or mapper must keep every old behaviour [MEDIUM]
+
+**Seen:** A date parser was replaced by a narrower one. The old one stripped several timezone
+suffix forms, the new one only one; a choice between two fields was made on the raw strings, so an
+empty or invalid first value hid a valid second one. Each looked like a pure move.
+**Action:** For every function or file removed or replaced, list what the old code did on the odd
+inputs (empty, invalid, each suffix or format, a missing field, each error) and confirm the new code
+does the same, or that the change is intended and tested. Parse each candidate first, then choose.
+
+### IOS-067 - An extension hands over to the app: check both sides and the error path [HIGH]
+
+**Seen:** A widget action opened the app to finish the job. The app side reused dashboard data
+already in memory, so it showed a stale map. A server 401 inside the extension was mapped to a
+plain failure instead of the hand-over to sign in. After a successful POST, the refresh of the
+shared snapshot used `try?`, so a failed refresh left the widget showing the old state and invited a
+second tap.
+**Action:** Trace the hand-over to the end: what the app refetches on arrival (never trust
+in-memory state), and what each server error (401, 403, timeout) does in the extension. For every
+`try?` after a successful write, ask what the user sees when it fails. Do not write "session expiry
+is handled" from a doc comment; name the code on the 401 path.

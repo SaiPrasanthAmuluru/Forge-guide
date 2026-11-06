@@ -32,6 +32,10 @@ CONF_MISSING=0
 if [ -f "$SPEC_FILE" ] && grep -q '^<high | medium | low' "$SPEC_FILE"; then CONF_MISSING=1; fi
 if [ -f "$SPEC_FILE" ] && grep -Eq '(Impact|Reuse) scan:\*\* <' "$SPEC_FILE"; then SCANS_MISSING=1; fi
 
+FC_MISSING=0; IND_MISSING=0
+if ! grep -Eqi 'final-check: *(clean|findings fixed)' "$VERIFICATION_FILE"; then FC_MISSING=1; fi
+if ! grep -Eqi 'verdict: *(approve|no blocking|no findings)|skipped: *fast' "$VERIFICATION_FILE"; then IND_MISSING=1; fi
+
 echo "== verify-spec: $SPEC_DIR =="
 echo "  Total criteria/items: $TOTAL"
 echo "  Unchecked:            $UNCHECKED"
@@ -53,7 +57,18 @@ if [ "$CONF_MISSING" -eq 1 ]; then
   echo "  what was read, and what was not verified (the developer sees this at handoff)."
 fi
 
-if [ "$UNCHECKED" -gt 0 ] || [ "$CONF_MISSING" -eq 1 ] || [ "$FAILS" -gt 0 ] || [ "$MAP_MISSING" -eq 1 ] || [ "$SCANS_MISSING" -eq 1 ]; then
+if [ "$FC_MISSING" -eq 1 ]; then
+  echo "  verification.md: no 'final-check: clean' result - run scripts/final-check.sh --local, fix what it"
+  echo "  prints, and record the result. A run that says the spell check did not run is not a pass."
+fi
+
+if [ "$IND_MISSING" -eq 1 ]; then
+  echo "  verification.md: no independent-pass verdict - run a fresh-context reviewer on the diff and record"
+  echo "  'verdict: Approve' or 'verdict: No blocking findings'. A Request changes verdict means fix, then run"
+  echo "  the reviewer again; 'skipped: fast' only when Mode is fast and the change is small."
+fi
+
+if [ "$FC_MISSING" -eq 1 ] || [ "$IND_MISSING" -eq 1 ] || [ "$UNCHECKED" -gt 0 ] || [ "$CONF_MISSING" -eq 1 ] || [ "$FAILS" -gt 0 ] || [ "$MAP_MISSING" -eq 1 ] || [ "$SCANS_MISSING" -eq 1 ]; then
   echo ""
   echo "NOT VERIFIED - resolve unchecked items and FAILs before marking spec.md done."
   exit 1

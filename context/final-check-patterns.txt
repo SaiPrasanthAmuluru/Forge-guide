@@ -1,0 +1,7 @@
+# label<TAB>regex<TAB>unless-regex (optional), run on added lines only. Edit for the project.
+# A line carrying "forge-allow" is skipped. A line matching the unless-regex is not reported.
+# The text of a scanned line comes after "path:line:", so patterns are not anchored to the line start.
+todo-no-ref	(TODO|FIXME|XXX)([^A-Za-z0-9]|$)	(#[0-9]+|[A-Z][A-Z0-9]+-[0-9]+|https?://)
+debug-print	(console\.log\(|debugger;|NSLog\(|debugPrint\(|System\.out\.println\(|print_r\(|var_dump\()
+conflict-marker	:[0-9]+:(<<<<<<<|>>>>>>>|=======$)
+focus-test	(fdescribe\(|fit\(|it\.only\(|describe\.only\(|test\.only\()

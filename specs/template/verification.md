@@ -6,10 +6,13 @@ criterion from `spec.md` explicitly - "it compiles" and "it runs" are not verifi
 - [ ] Criterion 1 - <how it was checked: test / manual trace / repro> - PASS/FAIL
 - [ ] Criterion 2 - <how it was checked> - PASS/FAIL
 
-## Independent pass (recommended before the developer raises a PR - see memory/quality-gate.md)
+## Final check and independent pass (required - scripts/verify-spec.sh fails without both)
 
-- [ ] Run by `forge-reviewer` or a human, not the context that wrote the change - verdict:
-  <...> - or reason it was not run (e.g. `fast` Mode, low-risk): <...>
+- [ ] `scripts/final-check.sh --local` (spelling, whitespace, leftover debug code on added lines) -
+  final-check: <clean | findings fixed> (not "NOT RUN")
+- [ ] Independent pass run by `forge-reviewer` or a human, not the context that wrote the change -
+  verdict: <Approve | No blocking findings>, written only after every CRITICAL, HIGH and un-waived
+  MEDIUM was fixed and the reviewer run again - or the skip written as shown in AGENTS.md step 4 when Mode is fast
 
 ## Tests and CI gates (before pushing)
 

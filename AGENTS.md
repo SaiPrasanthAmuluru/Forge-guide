@@ -66,11 +66,16 @@ one section of `memory/quality-gate-detail.md` when applying a check in depth;
 2. Run the applicable `memory/quality-gate.md` checks, scoped to new/changed code (ratchet).
 3. Re-run `scripts/impact.sh <base>` and `scripts/reuse-scan.sh <base>` on your own diff and put
    anything new into the spec.
-4. Offer the independent pass (a fresh-context reviewer or a human, not the context that wrote
-   the change) at the depth the Mode sets, and record it in `verification.md`
-   (`scripts/verify-spec.sh` fails until it is). A same-context review is an "author pass, not
-   independent" and can't approve. Whether to open a PR is the developer's call: never create
-   one yourself; say the change is ready for review and stop.
+4. Run `scripts/final-check.sh --local` and fix everything it prints (spelling, whitespace, leftover
+   debug code, on your added lines); record `final-check: clean`. Then run the independent pass
+   yourself - do not wait to be asked: use the Mode in effect (the lower of the Mode line and the triage suggestion; any HIGH-risk file
+   makes it strict): `strict` the whole diff, `standard` when over 300 changed lines, `fast` may
+   record `skipped: fast`. Use a fresh-context reviewer (a
+   subagent, another session or a human); fix every CRITICAL, HIGH and un-waived MEDIUM, re-run it
+   on the fix, and record `verdict: ...` in `verification.md` (`scripts/verify-spec.sh` fails until
+   both are recorded). A same-context review is an "author pass, not independent" and can't approve.
+   Whether to open a PR is the developer's call: never create one yourself; say the change is
+   ready for review and stop.
 5. Keep the developer in control (`memory/constitution.md`: Developer control, Fit the code as
    it is today): change only what the spec names, match the existing code, never commit or
    push unasked, and finish with a short handoff - files changed, what was left untouched,

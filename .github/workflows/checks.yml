@@ -14,6 +14,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Publish gate (spelling, shellcheck, markdown, links, size budget)
+        run: |
+          pip install codespell shellcheck-py
+          npm install -g markdownlint-cli
+          scripts/lint-repo.sh
+
+      - name: Final check flags typos and leftovers on added lines only
+        run: |
+          d="$(mktemp -d)"; cd "$d"; git init -q .; git config user.email a@b; git config user.name a
+          printf 'let a = 1\n' > a.txt; git add .; git commit -qm 1
+          printf 'let a = 1\n// %s it\nNSLog("x")\n' "recie""ve" > a.txt
+          if "$GITHUB_WORKSPACE/scripts/final-check.sh" --local; then echo "should have failed"; exit 1; fi
+          printf 'let a = 1\n// receive it\n' > a.txt
+          "$GITHUB_WORKSPACE/scripts/final-check.sh" --local
+
+      - name: verify-spec refuses a spec without final check and independent verdict
+        run: |
+          d="$(mktemp -d)"; cp specs/template/*.md "$d"/; sed -i 's/^- \[ \]/- [x]/' "$d/verification.md"
+          out="$(scripts/verify-spec.sh "$d" || true)"
+          echo "$out" | grep -q "no 'final-check: clean'" && echo "$out" | grep -q "no independent-pass verdict"
+
       - name: Shell scripts parse
         run: |
           for f in scripts/*.sh scripts/probes/*.sh; do
@@ -32,6 +53,74 @@ jobs:
         run: |
           em="$(printf '\342\200\224')"; en="$(printf '\342\200\223')"
           if grep -rIn --exclude-dir=.git -e "$em" -e "$en" . ; then echo "replace long dashes with plain hyphens"; exit 1; fi
+
+      - name: pr-threads reads threads from a fake Azure server
+        run: |
+          set -e
+          t="$(mktemp -d)"; mkdir -p "$t/bin" "$t/r"; git -C "$t/r" init -q .
+          git -C "$t/r" remote add origin "https://o@dev.azure.com/o/My%20Proj/_git/app"
+          printf '#!/bin/sh\nurl=""; out=""; while [ $# -gt 0 ]; do case "$1" in -o) out="$2"; shift;; http*) url="$1";; esac; shift; done\ncat >/dev/null\ncase "$url" in *threads*) echo "{\\"value\\":[{\\"id\\":1,\\"comments\\":[{\\"author\\":{\\"displayName\\":\\"Al\\"},\\"content\\":\\"hello\\"}]}]}" > "$out";; *) echo "{\\"title\\":\\"T\\"}" > "$out";; esac\n' > "$t/bin/curl"; chmod +x "$t/bin/curl"
+          out="$(cd "$t/r" && FORGE_AZURE_PAT=x PATH="$t/bin:$PATH" "$OLDPWD/scripts/pr-threads.sh" 5)"
+          echo "$out" | grep -q 'TITLE: T'; echo "$out" | grep -q 'Al: hello'
+
+      - name: pr-watch reports new and updated PRs and forgets finished ones
+        run: |
+          set -e
+          t="$(mktemp -d)"; git init -q --bare "$t/o.git"; git init -q -b main "$t/w"; cd "$t/w"
+          git config user.email a@b; git config user.name n; git remote add origin "$t/o.git"
+          echo a > f; git add .; git commit -qm one; git push -q origin main
+          c1="$(git rev-parse HEAD)"; git push -q origin "$c1:refs/pull/1/merge" "$c1:refs/pull/2/merge"
+          cd "$OLDPWD"; export FORGE_STATE_HOME="$t/s"; mkdir -p "$FORGE_STATE_HOME"; printf 'w %s\n' "$t/w" > "$FORGE_STATE_HOME/watch-repos.txt"
+          scripts/pr-watch.sh; grep -q 'watching 2' "$FORGE_STATE_HOME/watch.log"
+          cd "$t/w"; echo b >> f; git commit -qam two; c2="$(git rev-parse HEAD)"
+          git push -q origin "$c2:refs/pull/3/merge"; git push -qf origin "$c2:refs/pull/1/merge"; git push -q origin :refs/pull/2/merge; cd "$OLDPWD"
+          scripts/pr-watch.sh
+          grep -q 'PR 3 is new' "$FORGE_STATE_HOME/watch.log"; grep -q 'PR 1 has new commits' "$FORGE_STATE_HOME/watch.log"; grep -q 'PR 2 no longer active' "$FORGE_STATE_HOME/watch.log"
+
+      - name: pr-watch ignores a moved target branch and forgets an emptied list
+        run: |
+          set -e
+          W="$GITHUB_WORKSPACE"
+          t="$(mktemp -d)"; git init -q --bare "$t/o.git"; git init -q -b main "$t/w"; cd "$t/w"
+          git config user.email a@b; git config user.name n; git remote add origin "$t/o.git"
+          echo a > f; git add .; git commit -qm one; git push -q origin main; T1="$(git rev-parse HEAD)"
+          git checkout -q -b feat; echo p > p; git add .; git commit -qm pr; P="$(git rev-parse HEAD)"; git checkout -q main
+          tree="$(git rev-parse "$T1^{tree}")"
+          M1="$(git commit-tree "$tree" -p "$T1" -p "$P" -m merge1)"
+          git push -q origin "$M1:refs/pull/7/merge" "$P:refs/forge-src/7"
+          export FORGE_STATE_HOME="$t/s"; mkdir -p "$FORGE_STATE_HOME"; printf 'w %s\n' "$t/w" > "$FORGE_STATE_HOME/watch-repos.txt"
+          cd "$OLDPWD"; "$W/scripts/pr-watch.sh"; grep -q 'watching 1' "$FORGE_STATE_HOME/watch.log"
+          # target branch moves: the merge commit changes, the PR's own head does not
+          cd "$t/w"; echo b >> f; git commit -qam two; T2="$(git rev-parse HEAD)"; git push -q origin main
+          M2="$(git commit-tree "$(git rev-parse "$T2^{tree}")" -p "$T2" -p "$P" -m merge2)"
+          git push -qf origin "$M2:refs/pull/7/merge"; cd "$OLDPWD"
+          "$W/scripts/pr-watch.sh"
+          grep -q 'PR 7: target branch moved' "$FORGE_STATE_HOME/watch.log"
+          if grep -q 'PR 7 has new commits' "$FORGE_STATE_HOME/watch.log"; then echo "FAIL: reported an update"; exit 1; fi
+          # the PR gets a new commit: reported
+          cd "$t/w"; git checkout -q feat; echo q > q; git add .; git commit -qm more; P2="$(git rev-parse HEAD)"; git checkout -q main
+          M3="$(git commit-tree "$(git rev-parse "$T2^{tree}")" -p "$T2" -p "$P2" -m merge3)"
+          git push -qf origin "$M3:refs/pull/7/merge"; cd "$OLDPWD"
+          "$W/scripts/pr-watch.sh"; grep -q 'PR 7 has new commits' "$FORGE_STATE_HOME/watch.log"
+          # every PR completed: an empty but successful listing forgets them
+          cd "$t/w"; git push -q origin :refs/pull/7/merge; cd "$OLDPWD"
+          "$W/scripts/pr-watch.sh"; grep -q 'PR 7 no longer active' "$FORGE_STATE_HOME/watch.log"
+          test ! -e "$FORGE_STATE_HOME/watch/w/7"
+          # a failed listing keeps state
+          cd "$t/w"; git remote set-url origin "$t/missing.git"; cd "$OLDPWD"
+          "$W/scripts/pr-watch.sh"; grep -q 'ls-remote failed' "$FORGE_STATE_HOME/watch.log"
+          echo PRWATCH-OK
+
+      - name: pr-threads reads the common Azure remote URL forms
+        run: |
+          chk() { git remote remove origin 2>/dev/null || true; git remote add origin "$1"; got="$(FORGE_THREADS_PARSE_ONLY=1 "$GITHUB_WORKSPACE/scripts/pr-threads.sh" 5 2>&1)"; [ "$got" = "$2" ] || { echo "$1 -> $got (want $2)"; exit 1; }; }
+          set -e; d="$(mktemp -d)"; cd "$d"; git init -q .
+          chk 'https://acme@dev.azure.com/acme/My%20Proj/_git/App' 'acme/My%20Proj/App'
+          chk 'git@ssh.dev.azure.com:v3/acme/Proj/App' 'acme/Proj/App'
+          chk 'https://acme.visualstudio.com/Proj/_git/App' 'acme/Proj/App'
+          chk 'https://acme.visualstudio.com/DefaultCollection/Proj/_git/App' 'acme/Proj/App'
+          chk 'acme@vs-ssh.visualstudio.com:v3/acme/Proj/App' 'acme/Proj/App'
+          chk 'https://acme.visualstudio.com/_git/App' 'acme/App/App'
 
       - name: review-post anchors findings on changed lines
         run: |

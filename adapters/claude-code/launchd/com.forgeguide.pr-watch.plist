@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Watches active PRs with git (no CLI, no token) and notifies on new or updated ones. Runs scripts/pr-watch.sh every 10 minutes while you are logged in. Replace <TOOLKIT> with
+     the absolute path of your Forge-guide clone, then:
+       cp this file ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.forgeguide.pr-watch.plist
+     Stop it: launchctl unload ~/Library/LaunchAgents/com.forgeguide.pr-watch.plist -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.forgeguide.pr-watch</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string><TOOLKIT>/scripts/pr-watch.sh</string>
+  </array>
+  <key>StartInterval</key><integer>600</integer>
+  <key>RunAtLoad</key><true/>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string><HOME>/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StandardErrorPath</key><string>/tmp/forge-pr-watch.err</string>
+</dict>
+</plist>

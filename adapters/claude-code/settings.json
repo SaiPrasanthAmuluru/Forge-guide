@@ -20,7 +20,8 @@
       "Bash(<TOOLKIT>/scripts/reuse-scan.sh:*)",
       "Bash(<TOOLKIT>/scripts/local-changes.sh:*)",
       "Bash(<TOOLKIT>/scripts/playbook.sh:*)",
-      "Bash(<TOOLKIT>/scripts/verdict-check.sh:*)"
+      "Bash(<TOOLKIT>/scripts/verdict-check.sh:*)",
+      "Bash(<TOOLKIT>/scripts/pr-threads.sh:*)"
     ],
     "additionalDirectories": [
       "<TOOLKIT>"

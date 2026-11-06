@@ -25,8 +25,8 @@ downgrade because a leak "probably" won't be hit.
 ## Confidence
 
 Every finding carries **High | Medium | Low**. Low means "a human should double-check",
-not "weaker". If a check could not be fully traced within budget, say so at Low confidence
-- never assert it as fact, never skip it silently.
+not "weaker". If a check could not be fully traced within budget, say so at Low confidence -
+never assert it as fact, never skip it silently.
 
 ## The gate
 

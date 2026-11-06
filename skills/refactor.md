@@ -3,6 +3,7 @@
 Use when behavior should stay identical but structure/quality should improve.
 
 ## Trigger phrases
+
 "refactor", "clean up", "restructure", "simplify", "extract"
 
 **Only on request.** Refactor when the developer asked for it. In any other skill, a better

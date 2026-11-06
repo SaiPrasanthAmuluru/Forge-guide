@@ -37,7 +37,7 @@ are in your agent's documentation; keep the credential in a secret variable, nev
 - The agent runs with the host tokens (`GH_TOKEN`, `GITHUB_TOKEN`, `SYSTEM_ACCESSTOKEN`,
   `GITLAB_TOKEN`, `BITBUCKET_TOKEN`) removed from its environment, because it reads untrusted PR
   content. Only the posting step uses them.
-- It posts only if the first non-blank line of the output starts with `Reviewed: `.
+- It posts only if the first non-blank line of the output starts with `Reviewed:`.
 - Templates clone Forge-guide at the release tag `v0.1.1`. Create that tag in Forge-guide before
   using them (`git tag v0.1.1 && git push origin v0.1.1`), or change it to `main` to track latest.
 - The comment carries a hidden marker. On the next push the runner finds its earlier comment by

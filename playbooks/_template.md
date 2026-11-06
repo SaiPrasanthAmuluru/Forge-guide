@@ -42,6 +42,7 @@ not a generic description>
 Every stack playbook needs its own version of `playbooks/ios-swift.md`'s IOS-017 entry -
 the stack-specific instance of `memory/quality-gate.md`'s generalized platform/language
 API currency check. At minimum, state:
+
 - How this stack declares its minimum supported version (a config field, a manifest key, a
   language-level pragma).
 - What existing tooling can check for deprecated usage automatically (a linter rule set, a

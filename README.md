@@ -152,7 +152,7 @@ recall on known issues, false positives).
 
 ## Layout
 
-```
+```text
 Forge-guide/
 ├── AGENTS.md                 # the single entry point for any agent
 ├── CLAUDE.md                 # imports AGENTS.md + a few Claude Code notes
@@ -207,9 +207,12 @@ Forge-guide/
 │   ├── diff-scope.sh         # review pre-filter: read order, skips, budget - from numstat only
 │   ├── review-prep.sh        # one command for review prep: triage + impact + reuse + playbook index, run together
 │   ├── review-poll.sh        # on a schedule: review new open PRs on this machine, save the reviews (no posting unless --post)
+│   ├── pr-watch.sh           # notify when a PR is new or updated, using only git (any host); optional --review
 │   ├── verdict-check.sh      # fails when a review verdict is softer than its findings (gate arithmetic)
 │   ├── drift-check.sh
-│   ├── verify-spec.sh
+│   ├── verify-spec.sh        # fails until criteria, final-check and an independent verdict are recorded
+│   ├── final-check.sh        # typos, whitespace, debug leftovers on the lines a change adds (before handoff)
+│   ├── lint-repo.sh          # publish gate for this repo: spelling, shellcheck, markdown, links, size budget
 │   ├── check-context-freshness.sh  # cheap staleness check for base-snapshot.md
 │   └── refresh-context.sh          # shows what changed since the last snapshot
 └── adapters/                 # optional, tool-specific wiring; the rules never depend on it

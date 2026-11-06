@@ -1,7 +1,7 @@
 # Review regression set
 
 Real defects the rubric **missed** on first review, kept so a change to the rubric can be
-checked against them instead of judged by feel. Source: two real PR reviews (cases A* and B*) and a later
+checked against them instead of judged by feel. Source: two real PR reviews (cases A\* and B\*) and a later
 session report (cases dated 15 Oct), where an independent pass and the human reviewers
 found what the author's own pass did not.
 

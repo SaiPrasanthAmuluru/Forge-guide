@@ -18,6 +18,7 @@ for your stack is fine: the core output is enough; you simply read a little more
 ## 2. Read selectively (about 8-12 reads, ranges not whole files)
 
 Use the probe output to open only what a map row needs:
+
 - the README / ARCHITECTURE / CONTRIBUTING it listed (headings and key sections)
 - one reference feature end to end (signatures per layer)
 - the shared helper files and the auth / permission / logging / config homes it surfaced

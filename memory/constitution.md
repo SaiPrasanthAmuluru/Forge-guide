@@ -5,6 +5,7 @@ Non-negotiable and default principles for this project. Every rule carries a tie
 current codebase before being trusted, not assumed still true.
 
 Tiers:
+
 - **HARD** - never violated, no exceptions, no silent override.
 - **DEFAULT** - followed unless current repo context clearly disagrees; agent must say so
   if overriding.

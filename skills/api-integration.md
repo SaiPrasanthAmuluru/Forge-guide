@@ -4,6 +4,7 @@
 Use when connecting to an external service, library, or third-party API.
 
 ## Trigger phrases
+
 "integrate", "connect to", "call the API", "add SDK", "wire up"
 
 ## Step 0 - Context scan and flow map (before anything else)

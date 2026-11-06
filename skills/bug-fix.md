@@ -3,6 +3,7 @@
 Use when the task is fixing broken/incorrect existing behavior.
 
 ## Trigger phrases
+
 "fix", "broken", "not working", "bug", "crash", "regression"
 
 ## Step 0 - Already-fixed check (before investigating)

@@ -4,14 +4,14 @@ Bundles the seven task skills (`forge-*`), the read-only `forge-reviewer` subage
 hook. It does not bundle the scripts, playbooks or rules: those stay in the Forge-guide clone, so
 there is one copy. The plugin finds them through `FORGE_HOME`.
 
-```
+```bash
 git clone https://github.com/SaiPrasanthAmuluru/Forge-guide ~/Apps/Forge-guide
 ~/Apps/Forge-guide/install.sh --profile        # sets FORGE_HOME, checks the scripts
 ```
 
 Then in Claude Code:
 
-```
+```bash
 /plugin marketplace add SaiPrasanthAmuluru/Forge-guide
 /plugin install forge-guide@forge-guide
 ```

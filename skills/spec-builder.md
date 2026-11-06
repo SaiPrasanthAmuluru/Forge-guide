@@ -7,6 +7,7 @@ spec-gate by pre-filling `spec.md`, while never fabricating anything the sources
 actually support.
 
 ## Trigger phrases
+
 "build a spec from this ticket", "turn this PRD into a spec", "spec this feature out"
 
 ## Step 1 - Gather sources
@@ -19,6 +20,7 @@ custom fields often hold design and API links.
 ## Step 2 - Confirm or collect missing sources (batched, per the token-economy rule)
 
 For anything missing, ask once, batched:
+
 - No design source found - paste a link, or skip (UI/component inventory will be
   incomplete)?
 - No PRD/requirements doc found - paste a link, or use only the ticket's own description
@@ -41,6 +43,7 @@ confirmed.
 ## Step 4 - Draft spec.md
 
 Use `specs/template/spec.md`. In addition to the standard sections, populate:
+
 - **Component/Screen inventory** (if a design source was available) - name, purpose, key
   actions, data shown.
 - **Interface mapping** (if an API/schema source was available) - action → method →

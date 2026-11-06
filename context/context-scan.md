@@ -77,6 +77,7 @@ or a search subagent for broad sweeps where the tool has one) - the default and 
 only if the session already has one - use it for "who references this" and symbol
 outlines, since it is exact where text search is approximate; (3) `scripts/map-probe.sh`
 and `scripts/xref.sh`, which need nothing installed. Rules:
+
 - Source code, diffs and file contents stay on the developer's machine and the model
   provider already in use. Do not send them to any other service (hosted embedding APIs,
   hosted vector databases, remote analyzers) unless the developer approved that specific
@@ -92,6 +93,7 @@ duplicate look like it's "already there." For a git-based repo, that means diffi
 grepping against the base branch/commit the work started from, not `HEAD` mid-task.
 
 Look specifically for:
+
 - An existing extension/helper on a common type with equivalent semantics to what's about
   to be written (a new `isNotEmpty` when one already exists under a different name, a new
   `.firstOrNil(where:)` duplicating an existing pattern).
@@ -102,6 +104,7 @@ Look specifically for:
 
 Before investigating a bug or building a feature from scratch, check whether it's already
 solved:
+
 - Recent commit history for messages referencing the same issue/ticket.
 - Linked or recently-merged PRs referencing the same issue/ticket.
 - If evidence is found, still read the actual current code to confirm the defect is

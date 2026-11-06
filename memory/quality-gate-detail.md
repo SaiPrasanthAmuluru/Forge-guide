@@ -210,4 +210,3 @@ the same exhaustive budget on code that was never at risk in the first place.
   the declared minimum target, common deprecated-vs-superseded patterns for that stack)
   lives in `playbooks/<stack>.md` - see `playbooks/_template.md` for the section every
   stack playbook should have.
-

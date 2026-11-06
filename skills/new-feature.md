@@ -3,6 +3,7 @@
 Use when the task is adding new functionality that doesn't exist yet in the codebase.
 
 ## Trigger phrases
+
 "add", "build", "create a new", "implement", "support for"
 
 ## Step 0 - Context scan and flow map (before anything else, even clarification)
@@ -13,6 +14,7 @@ Read the overall map first (`context/base-snapshot.md`, in full; build it with
 `context/flow-brief.md` for the flow map (entry points, the current flow end to end, state
 and ownership, boundaries, closest analogue, tests) and for how unknowns become questions.
 Alongside it, scan for reuse:
+
 - Search for an existing utility/extension/helper that already does this or something
   close to it - surface any hit as one of the batched question options below ("found
   `X` in `Y` - reuse it?") rather than as a separate step.

@@ -5,6 +5,7 @@ reviews) to produce one consolidated report, instead of handing over individual 
 files for each task separately.
 
 ## Trigger phrases
+
 "generate a report", "summarize this session", "give me a report of everything we did"
 
 ## What to gather

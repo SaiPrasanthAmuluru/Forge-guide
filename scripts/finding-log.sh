@@ -12,6 +12,7 @@ set -eu
 case "$2" in CRITICAL|HIGH|MEDIUM|LOW|NIT) ;; *) echo "bad severity" >&2; exit 1;; esac
 case "$3" in self-check|scan|own-review|independent-pass|human-reviewer|other-agent|ci|production) ;; *) echo "bad found-by" >&2; exit 1;; esac
 case "$4" in true|false-positive|waived) ;; *) echo "bad status" >&2; exit 1;; esac
+# shellcheck source=scripts/_state.sh disable=SC2154
 . "$(dirname "$0")/_state.sh"
 f="$state/logs/findings-ledger.md"; mkdir -p "$state/logs"
 [ -f "$f" ] || printf '# Findings ledger\n\nAppend-only. One row per finding. Read by scripts/report-metrics.sh.\n\n| Date | Task | Severity | Found by | Status | Should have been caught by | Playbook ID | Note |\n|------|------|----------|----------|--------|----------------------------|-------------|------|\n' > "$f"

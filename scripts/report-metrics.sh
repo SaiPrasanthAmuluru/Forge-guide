@@ -4,6 +4,7 @@
 # Reads <state>/logs/{token-ledger,phase-ledger,findings-ledger}.md. Read-only; prints Markdown.
 # Rows with unknown tokens are counted but excluded from sums; nothing is invented.
 set -eu
+# shellcheck source=scripts/_state.sh disable=SC2154
 . "$(dirname "$0")/_state.sh"
 since="${1:-0000-00-00}"
 t="$state/logs/token-ledger.md"; p="$state/logs/phase-ledger.md"; fl="$state/logs/findings-ledger.md"

@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2034
 # _state.sh - sourced by the log scripts. Sets $state to where project logs live:
 # $FORGE_STATE if set; the toolkit itself when the toolkit IS the project; else <project>/.forge.
 here="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"

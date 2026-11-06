@@ -1,0 +1,3 @@
+[codespell]
+skip = .git,*.lock
+ignore-words-list = inh,repositor

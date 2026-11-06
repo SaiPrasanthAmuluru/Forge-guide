@@ -101,7 +101,7 @@ if [ "$1" = "--need" ]; then
       if (sc>0) printf "%d\t%s\t%s\t%s\t%s\t%s\n", sc, $1, $2, $3, $4, $5 }' | sort -t"$TAB" -k1,1nr -k2,2 | head -n "$MAX" > "$TD/hits"
   if [ ! -s "$TD/hits" ]; then echo "No existing helper matches those words. Say so in the spec's Reuse scan line and proceed to write one, in the place the map names for shared helpers."; exit 0; fi
   i=0
-  while IFS="$TAB" read -r sc ty nm kd loc sg; do
+  while IFS="$TAB" read -r _ ty nm kd loc sg; do
     i=$((i+1)); u=""
     [ "$i" -le 12 ] && u="  used $(uses "$nm")x"
     echo "$ty.$nm  [$kd]  $loc  $sg$u"

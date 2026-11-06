@@ -34,7 +34,7 @@ for file in "$REPO_ROOT"/memory/constitution.md "$REPO_ROOT"/skills/*.md; do
       rule_epoch=$(date -j -f "%Y-%m-%d" "$date_str" +%s 2>/dev/null || echo 0)
     fi
     if [ "$rule_epoch" -eq 0 ]; then
-      echo "  [BADFMT] $(basename "$file"):$lineno - unparseable date: $date_str"
+      echo "  [BADFMT] $(basename "$file"):$lineno - unparsable date: $date_str"
       continue
     fi
     age_days=$(( (NOW_EPOCH - rule_epoch) / 86400 ))

@@ -5,6 +5,7 @@
 #
 # Where those names ARE allowed (they are the point of those files):
 #   adapters/              tool-specific wiring
+#   .github/workflows/pr-review.yml   the reusable GitHub review workflow (a callable workflow has to live there)
 #   CLAUDE.md              the compatibility shim for tools that look for that file name
 #   playbooks/<stack>.md   per-stack lessons (ios-swift.md ships as the worked example)
 #   scripts/probes/        per-stack probe extras
@@ -23,7 +24,7 @@ fail=0
 list="$(find . -type f ! -path './.git/*' ! -name '.DS_Store' | sed 's#^\./##' | sort)"
 while IFS= read -r f; do
   case "$f" in
-    adapters/*|CLAUDE.md|LICENSE|scripts/neutrality-check.sh|scripts/probes/*|review/regressions.md|playbooks/ios-swift.md) continue ;;
+    adapters/*|.github/workflows/pr-review.yml|CLAUDE.md|LICENSE|scripts/neutrality-check.sh|scripts/probes/*|review/regressions.md|playbooks/ios-swift.md) continue ;;
   esac
   case "$f" in *.png|*.jpg|*.zip) continue ;; esac
   stack_ok=0

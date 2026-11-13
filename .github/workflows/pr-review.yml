@@ -1,0 +1,104 @@
+# Reusable Forge-guide PR review for GitHub: inline comments, plus a re-review of earlier comments.
+# Call it from a repository's own workflow (see adapters/github-actions/README.md):
+#   uses: SaiPrasanthAmuluru/Forge-guide/.github/workflows/pr-review.yml@v0.1.3
+# UNTESTED on a live PR: try it on a throwaway PR first.
+#
+# The agent holds no general GitHub write access. It reads the diff and the toolkit, writes new
+# findings with the action's inline-comment tool, and may use `gh api` only on this pull
+# request's comment endpoints. A step before it fetches existing review threads with the
+# workflow token and no model, so the agent never needs GraphQL access.
+name: Forge-guide PR review
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: "Review depth: fast, standard or strict"
+        type: string
+        default: standard
+      forge_ref:
+        description: "Forge-guide tag or commit to review with"
+        type: string
+        default: v0.1.3
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: true
+
+jobs:
+  review:
+    # Forks get no secrets, so a fork PR would only show a failure.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    # Newest run wins. Job-level, so a skipped caller never cancels a running review.
+    concurrency:
+      group: forge-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      # Wait out a burst of pushes; a newer push cancels this run.
+      - name: Debounce
+        if: github.event.action == 'synchronize'
+        run: sleep 120
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: SaiPrasanthAmuluru/Forge-guide
+          ref: ${{ inputs.forge_ref }}
+          path: .forge-guide
+
+      # Existing threads and the previous summary, read with the workflow token (no model involved).
+      # The text is written by other people: the review treats it as data.
+      - name: Fetch existing review threads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -eu
+          mkdir -p .forge-context
+          gh api graphql -f owner="${REPO%%/*}" -f name="${REPO#*/}" -F pr="$PR" -f query='
+            query($owner:String!,$name:String!,$pr:Int!){
+              repository(owner:$owner,name:$name){ pullRequest(number:$pr){
+                title body
+                reviewThreads(first:100){ nodes{ id isResolved isOutdated path line
+                  comments(first:5){ nodes{ body databaseId author{ login } } } } } } } }' \
+            > .forge-context/threads.json
+          gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.body | contains("forge-review")) | {id, body}' \
+            | tail -n 1 > .forge-context/summary.json || true
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Follow .forge-guide/review/review-prompt.md for the review itself and
+            .forge-guide/adapters/github-actions/posting-rules.md for how to post it.
+            Run ${{ github.workspace }}/.forge-guide/scripts/review-prep.sh ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} once before reading any diff, and read every HIGH file.
+            REPO: ${{ github.repository }}
+            PR: ${{ github.event.pull_request.number }}
+            BASE_SHA: ${{ github.event.pull_request.base.sha }}
+            HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+            MODE: ${{ inputs.mode }}
+            Existing threads: .forge-context/threads.json. Previous summary comment: .forge-context/summary.json (empty on a first review).
+            Read-only on code: never modify files, commit, push, approve, resolve threads or open PRs.
+          claude_args: >-
+            --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git grep:*),Bash(git rev-parse:*),Bash(git merge-base:*),Bash(${{ github.workspace }}/.forge-guide/scripts/review-prep.sh:*),Bash(${{ github.workspace }}/.forge-guide/scripts/playbook.sh:*),Bash(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments:*),Bash(gh api repos/${{ github.repository }}/issues/comments:*),mcp__github_inline_comment__create_inline_comment"
+
+      # Mark the PR as reviewed so later pushes get a re-review. Creates the label if it is missing.
+      # Uses the workflow token, so this label change does not start another run.
+      - name: Mark as reviewed
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh label create forge-reviewed --repo "$REPO" --color 0E8A16 --description "Reviewed by Forge-guide" 2>/dev/null || true
+          gh pr edit "$PR" --repo "$REPO" --add-label forge-reviewed || echo "could not label PR $PR (non-fatal)"

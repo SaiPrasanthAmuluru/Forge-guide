@@ -1,11 +1,34 @@
 # GitHub Actions adapter
 
-Two workflows, both optional. For a host- and agent-neutral setup (GitHub, Azure DevOps, GitLab,
+Three workflows, all optional. For a host- and agent-neutral setup (GitHub, Azure DevOps, GitLab,
 Bitbucket) use `adapters/ci/` instead; this folder is the vendor-action alternative.
 
 - `.github/workflows/checks.yml` (in this repo, already active): parses every script, checks the
   executable bits, runs `scripts/neutrality-check.sh`, and rejects long dashes. No secrets, so it
   also runs on fork PRs.
+- `.github/workflows/pr-review.yml` (in this repo): a reusable workflow other repositories call.
+  It posts one inline comment per finding and, on later pushes, replies to its own earlier
+  threads. The agent gets no general GitHub write access: a step without a model fetches existing
+  threads, and the agent may call `gh api` only on that pull request's comment endpoints. How it
+  posts is in `posting-rules.md`. Call it from a repository with:
+
+  ```yaml
+  on:
+    pull_request:
+      types: [opened, synchronize, reopened]
+  jobs:
+    review:
+      permissions:
+        contents: read
+        pull-requests: write
+        id-token: write
+      uses: SaiPrasanthAmuluru/Forge-guide/.github/workflows/pr-review.yml@v0.1.3
+      secrets:
+        CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+  ```
+
+  The caller must grant those permissions. Leave "Allow GitHub Actions to create and approve pull
+  requests" off in the repository settings. Untested on a live PR: try a throwaway one first.
 - `pr-review.yml` (this folder): a template. Copy it to `.github/workflows/forge-review.yml` in
   any repository to get an automatic review comment on each opened or updated pull request. It
   checks out Forge-guide next to the project, so nothing is copied into the project.

@@ -35,6 +35,11 @@ jobs:
           out="$(scripts/verify-spec.sh "$d" || true)"
           echo "$out" | grep -q "no 'final-check: clean'" && echo "$out" | grep -q "no independent-pass verdict"
 
+      - name: Workflow files are valid
+        run: |
+          pip install actionlint-py
+          actionlint -shellcheck= .github/workflows/*.yml adapters/github-actions/pr-review.yml
+
       - name: Shell scripts parse
         run: |
           for f in scripts/*.sh scripts/probes/*.sh; do
